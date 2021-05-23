@@ -23,7 +23,7 @@ public class MailingListController {
     }
 
     @PostMapping("/mailing-list/add-from-apache-archive")
-    public MailingList addMailingListFromApache(@RequestBody MailingList mailingListRequest) throws IOException, MimeException {
+    public MailingList addMailingListFromApache(@RequestBody MailingList mailingListRequest){
         return mailingListService.addFromApacheArchive(mailingListRequest);
     }
 

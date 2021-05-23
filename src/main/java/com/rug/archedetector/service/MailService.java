@@ -17,7 +17,7 @@ import java.util.List;
 @Service
 public class MailService {
     @Autowired
-    private MailRepository mailRepository;
+    private final MailRepository mailRepository;
 
     @Autowired
     private MailingListRepository mailingListRepository;
