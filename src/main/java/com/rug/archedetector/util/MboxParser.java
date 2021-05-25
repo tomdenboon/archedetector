@@ -2,7 +2,6 @@ package com.rug.archedetector.util;
 
 import com.rug.archedetector.model.Mail;
 import com.rug.archedetector.model.MailingList;
-import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.mboxiterator.CharBufferWrapper;
 import org.apache.james.mime4j.mboxiterator.MboxIterator;
 import org.apache.james.mime4j.parser.MimeStreamParser;
@@ -38,7 +37,9 @@ public class MboxParser {
             System.out.println(mbox.getAbsolutePath());
         }
         System.gc();
-        mbox.delete();
+        if(!mbox.delete()){
+            System.out.print("files not deleting");
+        }
         return mails;
     }
 }
