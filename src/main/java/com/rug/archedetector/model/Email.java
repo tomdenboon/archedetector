@@ -4,18 +4,19 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Entity
-@Table(name = "mail")
-public class Mail {
+@Table(name = "email")
+public class Email {
     private long id;
     private MailingList mailingList;
     private String messageId;
     private String inReplyTo;
     private String sentFrom;
-    private String sentTo;
     private String subject;
-    private String date;
+    private ZonedDateTime date;
     private String body;
     private String raw;
 
@@ -65,22 +66,12 @@ public class Mail {
 
     @Basic
     @Column(name = "sent_from", nullable = true, length = 255)
-    public String getSentFrom(){
+    public String getSentFrom() {
         return sentFrom;
     }
 
     public void setSentFrom(String sentFrom) {
         this.sentFrom = sentFrom;
-    }
-
-    @Basic
-    @Column(name = "sent_to", columnDefinition = "TEXT")
-    public String getSentTo(){
-        return sentTo;
-    }
-
-    public void setSentTo(String sentTo) {
-        this.sentTo = sentTo;
     }
 
     @Basic
@@ -113,18 +104,17 @@ public class Mail {
         this.raw = raw;
     }
 
-    @Basic
     @Column(name = "date")
-    public String getDate() {
+    public ZonedDateTime getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(ZonedDateTime date) {
         this.date = date;
     }
 
     @Override
     public String toString() {
-        return  sentFrom + "\n" + subject;
+        return sentFrom + "\n" + subject;
     }
 }

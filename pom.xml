@@ -59,5 +59,15 @@
 			<artifactId>apache-mime4j-mbox-iterator</artifactId>
 			<version>0.8.4</version>
 		</dependency>
-    </dependencies>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>8.8.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>8.8.2</version>
+		</dependency>
+	</dependencies>
 </project>

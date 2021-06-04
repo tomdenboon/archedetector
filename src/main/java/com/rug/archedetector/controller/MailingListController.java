@@ -18,17 +18,17 @@ public class MailingListController {
 
 
     @GetMapping("/mailing-list")
-    public List<MailingList> getAllMailingLists(){
+    public List<MailingList> getAllMailingLists() {
         return mailingListService.getAll();
     }
 
     @PostMapping("/mailing-list/add-from-apache-archive")
-    public MailingList addMailingListFromApache(@RequestBody MailingList mailingListRequest){
+    public MailingList addMailingListFromApache(@RequestBody MailingList mailingListRequest) {
         return mailingListService.addFromApacheArchive(mailingListRequest);
     }
 
     @DeleteMapping("/mailing-list/{id}")
-    public ResponseEntity<?> deleteMailingList(@PathVariable long id){
+    public ResponseEntity<?> deleteMailingList(@PathVariable long id) {
         return mailingListService.delete(id);
     }
 
