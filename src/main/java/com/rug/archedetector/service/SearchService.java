@@ -5,7 +5,12 @@ import com.rug.archedetector.dao.MailingListRepository;
 import com.rug.archedetector.lucene.MailingListSearcher;
 import com.rug.archedetector.model.Email;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +30,11 @@ public class SearchService {
         this.mailingListRepository = mailingListRepository;
     }
 
-    public List<Email> searchKeyword(String query, Long mailingListId){
+    public Page<Email> searchKeyword(String query, Long mailingListId, Pageable pageable){
         List<Long> emailIds = new ArrayList<>();
         List<Email> emails = new ArrayList<>();
         try{
-            emailIds = mailingListSearcher.keyWordSearch(query, mailingListId);
+            emailIds = mailingListSearcher.keyWordSearch(query, mailingListId, pageable);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -37,6 +42,13 @@ public class SearchService {
             Email m = emailRepository.findByIdAndMailingListId(id, mailingListId).orElseThrow();
             emails.add(m);
         }
-        return emails;
+        int size = pageable.getPageSize() * (pageable.getPageNumber()+1);
+        if(emails.size() < pageable.getPageSize()){
+            size = emails.size();
+        } else {
+            size += 1;
+        }
+        System.out.println(size);
+        return new PageImpl<>(emails, pageable, size);
     }
 }

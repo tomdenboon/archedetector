@@ -23,8 +23,8 @@ public class MailingListController {
     }
 
     @PostMapping("/mailing-list/add-from-apache-archive")
-    public MailingList addMailingListFromApache(@RequestBody MailingList mailingListRequest) {
-        return mailingListService.addFromApacheArchive(mailingListRequest);
+    public MailingList addMailingListFromApache(@RequestBody MailingList mailingListRequest, @RequestParam(defaultValue = "") String[] filters) {
+        return mailingListService.addFromApacheArchiveWithFilters(mailingListRequest, filters);
     }
 
     @DeleteMapping("/mailing-list/{id}")

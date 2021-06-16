@@ -23,12 +23,26 @@ public class MboxParser {
                 Email email = new Email();
                 email.setRaw(s.toString());
                 email.setMailingList(mailingList);
+                email.setBody("");
                 handler.setMail(email);
                 InputStream is = s.asInputStream(Charset.defaultCharset());
                 parser.parse(is);
                 is.close();
-                if (email.getMessageId() != null) {
-                    emails.add(handler.getMail());
+                email = handler.getMail();
+                if(email.getSubject() == null){
+                    email.setSubject("[No Subject]");
+                }
+                if (email.getMessageId() != null &&
+                    email.getDate() != null) {
+                    if(email.getBody().contains("\u0000")){
+                        System.out.println(email.getDate());
+                        System.out.println();
+                    }
+                    email.setBody(email.getBody().replaceAll("\u0000", ""));
+                    emails.add(email);
+                } else {
+                    System.out.println("No date or message id");
+                    System.out.println(email.getRaw());
                 }
             }
             mboxIterator.close();

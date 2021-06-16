@@ -7,10 +7,12 @@ import com.rug.archedetector.lucene.MailingListIndexer;
 import com.rug.archedetector.model.Email;
 import com.rug.archedetector.model.MailingList;
 import com.rug.archedetector.util.ApacheMailingListParser;
+import com.rug.archedetector.util.EmailFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -33,9 +35,11 @@ public class MailingListService {
         return mailingListRepository.findAll();
     }
 
-    public MailingList addFromApacheArchive(MailingList mailinglist) {
+    public MailingList addFromApacheArchiveWithFilters(MailingList mailinglist, String[] filters) {
         mailinglist = mailingListRepository.save(mailinglist);
         List<Email> emails = apacheMailingListParser.getMailFromMailingList(mailinglist);
+        EmailFilter filter = new EmailFilter();
+        emails = filter.filterMail(emails, Arrays.asList(filters));
         emailRepository.saveAll(emails);
         mailingListIndexer.index(mailinglist, emails);
         return mailinglist;

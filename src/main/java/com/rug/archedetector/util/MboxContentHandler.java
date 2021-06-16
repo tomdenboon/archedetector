@@ -1,19 +1,20 @@
 package com.rug.archedetector.util;
 
 import com.rug.archedetector.model.Email;
-import org.apache.james.mime4j.MimeException;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mime4j.parser.AbstractContentHandler;
 import org.apache.james.mime4j.stream.BodyDescriptor;
 import org.apache.james.mime4j.stream.Field;
 
-import java.io.IOException;
+import javax.mail.internet.MimeUtility;
 import java.io.InputStream;
-import java.time.LocalDateTime;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class MboxContentHandler extends AbstractContentHandler {
-    Email email;
+    private Email email;
 
     private ZonedDateTime stringToDate(String dateString) {
         ZonedDateTime date = null;
@@ -22,8 +23,11 @@ public class MboxContentHandler extends AbstractContentHandler {
             if (dateString.charAt(4) == ' ' && dateString.charAt(5) == ' ') {
                 dateString = dateString.substring(0, 4) + dateString.substring(5);
             }
-            if (dateString.matches(".*[ ]\\(\\w\\w\\w\\)$")) {
-                dateString = dateString.substring(0, dateString.length() - 6);
+            if (dateString.matches(".*[ ]\\(.*\\)$")) {
+                dateString = dateString.substring(0, dateString.indexOf("(")).trim();
+            }
+            if (dateString.startsWith("RANDOM_")){
+                dateString = dateString.replaceAll("RANDOM_", "");
             }
             DateTimeFormatter dateFormat = DateTimeFormatter.RFC_1123_DATE_TIME;
             date = ZonedDateTime.parse(dateString, dateFormat);
@@ -37,6 +41,11 @@ public class MboxContentHandler extends AbstractContentHandler {
     public void field(Field field) {
         String name = field.getName().toLowerCase();
         String body = field.getBody();
+        try {
+            body = MimeUtility.decodeText(body);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         switch (name) {
             case "from" -> email.setSentFrom(body);
             case "subject" -> email.setSubject(body);
@@ -48,8 +57,21 @@ public class MboxContentHandler extends AbstractContentHandler {
 
     @Override
     public void body(BodyDescriptor bd, InputStream is){
-        String body = is.toString().replaceAll("^\\[LineReaderInputStreamAdaptor: \\[pos: \\d+]\\[limit: \\d+]\\[", "");
-        email.setBody(body.substring(0, body.length() - 2));
+        if(bd.getMimeType().equals("text/plain")) {
+            String transferEncoding = bd.getTransferEncoding();
+            Charset charset = Charset.forName(bd.getCharset());
+            try {
+                is = MimeUtility.decode(is, transferEncoding);
+                String body = IOUtils.toString(is, charset).replaceAll("^\\[LineReaderInputStreamAdaptor: \\[pos: \\d+]\\[limit: \\d+]\\[", "");
+                if(body.length() > 2) {
+                    email.setBody(email.getBody() + "\n" + body.substring(0, body.length() - 2));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+
+        }
     }
 
     public Email getMail() {
