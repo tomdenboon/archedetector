@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -28,11 +29,12 @@ public class EmailService {
         return emailRepository.findByMailingListId(id, pageable);
     }
 
-    public Email saveMail(Long mailingListId, Email email) {
-        return mailingListRepository.findById(mailingListId).map(mailingList -> {
-            email.setMailingList(mailingList);
-            return emailRepository.save(email);
-        }).orElseThrow(() -> new ResourceNotFoundException(""));
+    public Page<Email> getAllMailByMailingListIds(Long[] mailingListIds, Pageable pageable) {
+        return emailRepository.findByMailingListIdIn(Arrays.stream(mailingListIds).toList(), pageable);
+    }
+
+    public Email saveMail(Email email) {
+        return emailRepository.save(email);
     }
 
     public List<Email> batchSaveMail(Long mailingListId, List<Email> emails) {

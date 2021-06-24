@@ -31,6 +31,4 @@ public class MailingListController {
     public ResponseEntity<?> deleteMailingList(@PathVariable long id) {
         return mailingListService.delete(id);
     }
-
-
 }

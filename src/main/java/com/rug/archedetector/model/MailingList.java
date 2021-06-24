@@ -1,17 +1,30 @@
 package com.rug.archedetector.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "mailing_list")
 public class MailingList {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
     private long id;
+
+    @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "url", nullable = false)
     private String url;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    @Column(name = "id", nullable = false)
+    @JsonIgnore
+    @ManyToMany(mappedBy = "mailingLists")
+    private Set<MailingListCollection> mailingListCollections = new HashSet<>();
+
     public long getId() {
         return id;
     }
@@ -20,7 +33,6 @@ public class MailingList {
         this.id = id;
     }
 
-    @Column(name = "name", nullable = false)
     public String getName() {
         return name;
     }
@@ -29,7 +41,6 @@ public class MailingList {
         this.name = name;
     }
 
-    @Column(name = "url", nullable = false)
     public String getUrl() {
         return url;
     }
@@ -38,5 +49,11 @@ public class MailingList {
         this.url = url;
     }
 
+    public Set<MailingListCollection> getMailingListCollections() {
+        return mailingListCollections;
+    }
 
+    public void setMailingListCollections(Set<MailingListCollection> mailingListCollections) {
+        this.mailingListCollections = mailingListCollections;
+    }
 }

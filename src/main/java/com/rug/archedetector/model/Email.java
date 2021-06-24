@@ -1,30 +1,84 @@
 package com.rug.archedetector.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.HashSet;
+import java.util.Set;
+
 
 @Entity
 @Table(name = "email")
 public class Email {
-    private long id;
-    private MailingList mailingList;
-    private String messageId;
-    private String inReplyTo;
-    private String sentFrom;
-    private String subject;
-    private ZonedDateTime date;
-    private String body;
-    private String raw;
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "MAIL_SEQ")
     @SequenceGenerator(name = "MAIL_SEQ", sequenceName = "MAIL_SEQ", allocationSize = 100)
     @Column(name = "id", nullable = false)
+    private long id;
+
+    @ManyToOne(targetEntity = MailingList.class)
+    @JoinColumn(name = "mailing_list_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private MailingList mailingList;
+
+    @Basic
+    @Column(name = "message_id", nullable = false)
+    private String messageId;
+
+    @Basic
+    @Column(name = "in_reply_to")
+    private String inReplyTo;
+
+    @Basic
+    @Column(name = "sent_from")
+    private String sentFrom;
+
+    @Basic
+    @Column(name = "subject", columnDefinition = "TEXT")
+    private String subject;
+
+
+    @Column(name = "date")
+    private ZonedDateTime date;
+
+    @Basic
+    @Column(name = "body", columnDefinition = "TEXT")
+    private String body;
+
+    @Basic
+    @Column(name = "raw", columnDefinition = "TEXT")
+    private String raw;
+
+    @JsonIgnoreProperties("emails")
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "email_tag",
+            joinColumns = @JoinColumn(name = "email_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
+
+    public void addTag(Tag tag) {
+        tags.add(tag);
+        tag.getEmails().add(this);
+    }
+
+    public void removeTag(Tag tag) {
+        tags.remove(tag);
+        tag.getEmails().remove(this);
+    }
+
+    public Set<Tag> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<Tag> tags) {
+        this.tags = tags;
+    }
+
     public long getId() {
         return id;
     }
@@ -33,9 +87,6 @@ public class Email {
         this.id = id;
     }
 
-    @ManyToOne(targetEntity = MailingList.class)
-    @JoinColumn(name = "mailing_list_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     public MailingList getMailingList() {
         return mailingList;
     }
@@ -44,8 +95,7 @@ public class Email {
         this.mailingList = mailingList;
     }
 
-    @Basic
-    @Column(name = "message_id", nullable = false, length = 255)
+
     public String getMessageId() {
         return messageId;
     }
@@ -54,8 +104,7 @@ public class Email {
         this.messageId = messageId;
     }
 
-    @Basic
-    @Column(name = "in_reply_to", nullable = true, length = 255)
+
     public String getInReplyTo() {
         return inReplyTo;
     }
@@ -64,8 +113,7 @@ public class Email {
         this.inReplyTo = inReplyTo;
     }
 
-    @Basic
-    @Column(name = "sent_from", nullable = true, length = 255)
+
     public String getSentFrom() {
         return sentFrom;
     }
@@ -74,8 +122,7 @@ public class Email {
         this.sentFrom = sentFrom;
     }
 
-    @Basic
-    @Column(name = "subject", columnDefinition = "TEXT")
+
     public String getSubject() {
         return subject;
     }
@@ -84,8 +131,7 @@ public class Email {
         this.subject = subject;
     }
 
-    @Basic
-    @Column(name = "body", columnDefinition = "TEXT")
+
     public String getBody() {
         return body;
     }
@@ -94,8 +140,7 @@ public class Email {
         this.body = body;
     }
 
-    @Basic
-    @Column(name = "raw", columnDefinition = "TEXT")
+
     public String getRaw() {
         return raw;
     }
@@ -104,7 +149,6 @@ public class Email {
         this.raw = raw;
     }
 
-    @Column(name = "date")
     public ZonedDateTime getDate() {
         return date;
     }
