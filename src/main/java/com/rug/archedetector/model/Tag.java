@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import javax.persistence.*;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -21,10 +22,22 @@ public class Tag {
     private String name;
 
     @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY, mappedBy = "tags")
+    @ManyToMany(mappedBy = "tags")
     private Set<Email> emails = new HashSet<>();
 
+    @JsonIgnore
+    @ManyToMany(mappedBy = "tags")
+    private Set<Issue> issues = new HashSet<>();
+
     public Tag() {
+    }
+
+    public Set<Issue> getIssues() {
+        return issues;
+    }
+
+    public void setIssues(Set<Issue> issues) {
+        this.issues = issues;
     }
 
     public Set<Email> getEmails() {
@@ -43,12 +56,19 @@ public class Tag {
         this.id = id;
     }
 
-
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void prepareForDelete(){
+        for (Iterator<Email> iterator = emails.iterator(); iterator.hasNext();) {
+            Email email = iterator.next();
+            email.getTags().remove(this);
+            iterator.remove();
+        }
     }
 }

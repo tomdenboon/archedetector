@@ -19,28 +19,27 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
-public class MailingListSearcher {
-    public List<Long> searchInMultiple(String query, List<Long> mailingListIds, Pageable pageable)
+public class IssueListSearcher {
+    public List<Long> searchInMultiple(String query, List<Long> issueListIds, Pageable pageable)
             throws ParseException, IOException {
-        List<Long> emailIds = new ArrayList<>();
+        List<Long> issueIds = new ArrayList<>();
         StandardAnalyzer analyzer = new StandardAnalyzer();
         MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
-                new String[] {"sentFrom", "subject", "body" },
+                new String[] {"summary", "description", "comments" },
                 analyzer);
         Query q = queryParser.parse(query);
         List<IndexReader> readers = new ArrayList<>();
-        for(int i = 0; i < mailingListIds.size(); i++){
-            Path path = Path.of("src/main/resources/index/mailingList/"+mailingListIds.get(i));
+        for(int i = 0; i < issueListIds.size(); i++){
+            Path path = Path.of("src/main/resources/index/issueList/"+issueListIds.get(i));
             if (Files.exists(path)) {
                 Directory indexDirectory =
                         FSDirectory.open(path);
                 readers.add(DirectoryReader.open(indexDirectory));
             }
         }
-        if(readers.size() > 0) {
+        if(readers.size()>0) {
             IndexReader[] indexReaders = new IndexReader[readers.size()];
             for (int i = 0; i < readers.size(); i++)
             {
@@ -48,18 +47,21 @@ public class MailingListSearcher {
             }
             MultiReader multiReader = new MultiReader(indexReaders);
             IndexSearcher searcher = new IndexSearcher(multiReader);
+
             int startIndex = pageable.getPageNumber() * pageable.getPageSize();
             int endIndex = (pageable.getPageNumber() + 1) * pageable.getPageSize();
+
             TopDocs docs = searcher.search(q, endIndex);
+
             ScoreDoc[] hits = docs.scoreDocs;
             for (int i = startIndex; i < hits.length; ++i) {
                 int docId = hits[i].doc;
                 Document d = searcher.doc(docId);
-                emailIds.add(Long.parseLong(d.get("id")));
+                issueIds.add(Long.parseLong(d.get("id")));
             }
 
             multiReader.close();
         }
-        return emailIds;
+        return issueIds;
     }
 }

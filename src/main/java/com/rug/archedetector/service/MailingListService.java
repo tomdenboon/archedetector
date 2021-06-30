@@ -6,6 +6,7 @@ import com.rug.archedetector.exceptions.ResourceNotFoundException;
 import com.rug.archedetector.lucene.MailingListIndexer;
 import com.rug.archedetector.model.Email;
 import com.rug.archedetector.model.MailingList;
+import com.rug.archedetector.model.QueryCollection;
 import com.rug.archedetector.util.ApacheMailingListParser;
 import com.rug.archedetector.util.EmailFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 @Service
@@ -47,6 +49,9 @@ public class MailingListService {
 
     public ResponseEntity<?> delete(Long id) {
         return mailingListRepository.findById(id).map(mailingList -> {
+            mailingList.prepareForDelete();
+            List<Email> emails = emailRepository.findByMailingListId(id);
+            emailRepository.deleteAll(emails);
             mailingListRepository.delete(mailingList);
             mailingListIndexer.deleteIndex(mailingList);
             return ResponseEntity.ok().build();

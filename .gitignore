@@ -4,7 +4,6 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-!**/src/main/resources/index/
 
 ### STS ###
 .apt_generated
@@ -33,4 +32,6 @@ build/
 ledgerware/static/*### VS Code ###
 .vscode/
 
-.mbox
+/src/main/resources/mbox/
+/src/main/resources/index/mailingList/
+/src/main/resources/index/issueList/

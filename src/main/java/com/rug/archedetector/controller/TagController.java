@@ -16,18 +16,17 @@ public class TagController {
     @Autowired
     private TagService tagService;
 
-
-    @GetMapping("/tags")
+    @GetMapping("/tag")
     public List<Tag> getTags() {
         return tagService.getAll();
     }
 
-    @PostMapping("/tags")
+    @PostMapping("/tag")
     public Tag addTag(@RequestBody Tag tag) {
         return tagService.save(tag);
     }
 
-    @DeleteMapping("/tags/{id}")
+    @DeleteMapping("/tag/{id}")
     public ResponseEntity<?> deleteTag(@PathVariable long id) {
         return tagService.delete(id);
     }

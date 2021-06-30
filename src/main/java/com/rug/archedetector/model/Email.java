@@ -15,14 +15,12 @@ import java.util.Set;
 @Table(name = "email")
 public class Email {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "MAIL_SEQ")
-    @SequenceGenerator(name = "MAIL_SEQ", sequenceName = "MAIL_SEQ", allocationSize = 100)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private long id;
 
     @ManyToOne(targetEntity = MailingList.class)
     @JoinColumn(name = "mailing_list_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private MailingList mailingList;
 
     @Basic
@@ -53,8 +51,7 @@ public class Email {
     @Column(name = "raw", columnDefinition = "TEXT")
     private String raw;
 
-    @JsonIgnoreProperties("emails")
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(targetEntity = Tag.class)
     @JoinTable(name = "email_tag",
             joinColumns = @JoinColumn(name = "email_id"),
             inverseJoinColumns = @JoinColumn(name = "tag_id")

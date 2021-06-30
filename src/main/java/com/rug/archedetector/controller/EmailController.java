@@ -31,4 +31,10 @@ public class EmailController {
     public Page<Email> getAllMail(@PathVariable(value = "mailingListId") Long mailingListId, Pageable pageable) {
         return emailService.getAllMailByMailingListId(mailingListId, pageable);
     }
+
+    @GetMapping("/query-collection/{queryCollectionId}/email")
+    public Page<Email> getAllMailByQueryCollectionId
+            (@PathVariable(value = "queryCollectionId") Long queryCollectionId, Pageable pageable) {
+        return emailService.getMailByQueryCollectionId(queryCollectionId, pageable);
+    }
 }

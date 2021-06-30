@@ -9,8 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-@Table(name = "mailing_list")
-public class MailingList {
+@Table(name = "issue_list")
+public class IssueList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -19,11 +19,11 @@ public class MailingList {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "url", nullable = false)
-    private String url;
+    @Column(name = "key", nullable = false)
+    private String key;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "mailingLists")
+    @ManyToMany(mappedBy = "issueLists")
     private Set<QueryCollection> queryCollections = new HashSet<>();
 
     public long getId() {
@@ -42,14 +42,13 @@ public class MailingList {
         this.name = name;
     }
 
-    public String getUrl() {
-        return url;
+    public String getKey() {
+        return key;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setKey(String key) {
+        this.key = key;
     }
-
 
     public Set<QueryCollection> getQueryCollections() {
         return queryCollections;
@@ -62,9 +61,8 @@ public class MailingList {
     public void prepareForDelete(){
         for (Iterator<QueryCollection> iterator = queryCollections.iterator(); iterator.hasNext();) {
             QueryCollection queryCollection = iterator.next();
-            queryCollection.getMailingLists().remove(this);
+            queryCollection.getIssueLists().remove(this);
             iterator.remove();
         }
     }
-
 }

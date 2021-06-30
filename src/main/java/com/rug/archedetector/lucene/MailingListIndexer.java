@@ -18,7 +18,9 @@ import java.nio.file.Path;
 import java.util.List;
 
 public class MailingListIndexer {
-    private Document getEmailDocument(Email email) {
+    final private String indexDir = "src/main/resources/index/mailingList/";
+
+    private Document getDocument(Email email) {
         Document doc = new Document();
         doc.add(new Field("id", Long.toString(email.getId()), TextField.TYPE_STORED));
         doc.add(new Field("sentFrom", email.getSentFrom(), TextField.TYPE_STORED));
@@ -29,13 +31,13 @@ public class MailingListIndexer {
 
     public void index(MailingList mailingList, List<Email> emails) {
         try {
-            Path indexPath = Files.createDirectory(Path.of("src/main/resources/index/" + mailingList.getId()));
+            Path indexPath = Files.createDirectory(Path.of(indexDir + mailingList.getId()));
             Directory directory = FSDirectory.open(indexPath);
             Analyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig config = new IndexWriterConfig(analyzer);
             IndexWriter writer = new IndexWriter(directory, config);
             for (Email e : emails) {
-                writer.addDocument(getEmailDocument(e));
+                writer.addDocument(getDocument(e));
             }
             writer.close();
         } catch (Exception e) {
@@ -45,12 +47,11 @@ public class MailingListIndexer {
 
     public void deleteIndex(MailingList mailingList) {
         try {
-            Path indexPath = Path.of("src/main/resources/index/" + mailingList.getId());
+            Path indexPath = Path.of(indexDir + mailingList.getId());
             IOUtils.rm(indexPath);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Index not deleting");
         }
     }
-
 }

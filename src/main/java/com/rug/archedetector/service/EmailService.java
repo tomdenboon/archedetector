@@ -2,14 +2,19 @@ package com.rug.archedetector.service;
 
 import com.rug.archedetector.dao.EmailRepository;
 import com.rug.archedetector.dao.MailingListRepository;
+import com.rug.archedetector.dao.QueryCollectionRepository;
 import com.rug.archedetector.exceptions.ResourceNotFoundException;
 import com.rug.archedetector.model.Email;
+import com.rug.archedetector.model.Issue;
+import com.rug.archedetector.model.IssueList;
+import com.rug.archedetector.model.MailingList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,9 +24,10 @@ public class EmailService {
     private final EmailRepository emailRepository;
 
     @Autowired
-    private MailingListRepository mailingListRepository;
+    private final QueryCollectionRepository queryCollectionRepository;
 
-    public EmailService(EmailRepository emailRepository) {
+    public EmailService(EmailRepository emailRepository, QueryCollectionRepository queryCollectionRepository) {
+        this.queryCollectionRepository = queryCollectionRepository;
         this.emailRepository = emailRepository;
     }
 
@@ -37,19 +43,13 @@ public class EmailService {
         return emailRepository.save(email);
     }
 
-    public List<Email> batchSaveMail(Long mailingListId, List<Email> emails) {
-        return mailingListRepository.findById(mailingListId).map(mailingList -> {
-            for (Email m : emails) {
-                m.setMailingList(mailingList);
+    public Page<Email> getMailByQueryCollectionId(Long queryCollectionId, Pageable pageable) {
+        return queryCollectionRepository.findById(queryCollectionId).map(queryCollection -> {
+            List<Long> mailingIds = new ArrayList<>();
+            for(MailingList mailingList : queryCollection.getMailingLists()){
+                mailingIds.add(mailingList.getId());
             }
-            return emailRepository.saveAll(emails);
-        }).orElseThrow(() -> new ResourceNotFoundException(""));
-    }
-
-    public ResponseEntity<?> deleteByIdAndMailingId(Long mailId, Long mailingListId) {
-        return emailRepository.findByIdAndMailingListId(mailId, mailingListId).map(mail -> {
-            emailRepository.delete(mail);
-            return ResponseEntity.ok().build();
-        }).orElseThrow(() -> new ResourceNotFoundException("Comment not found with id " + mailId + " and postId " + mailingListId));
+            return emailRepository.findByMailingListIdIn(mailingIds, pageable);
+        }).orElseThrow();
     }
 }

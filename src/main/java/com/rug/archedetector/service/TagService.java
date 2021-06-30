@@ -2,6 +2,7 @@ package com.rug.archedetector.service;
 
 import com.rug.archedetector.dao.TagRepository;
 import com.rug.archedetector.exceptions.ResourceNotFoundException;
+import com.rug.archedetector.model.Email;
 import com.rug.archedetector.model.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,7 @@ public class TagService {
 
     public ResponseEntity<?> delete(Long id) {
         return tagRepository.findById(id).map(tag -> {
+            tag.prepareForDelete();
             tagRepository.delete(tag);
             return ResponseEntity.ok().build();
         }).orElseThrow(() -> new ResourceNotFoundException("id " + id + " not found"));
