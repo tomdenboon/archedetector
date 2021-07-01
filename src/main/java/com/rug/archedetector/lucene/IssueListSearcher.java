@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IssueListSearcher {
+    final private String indexDir = "src/main/resources/index/issueList/";
+
     public List<Long> searchInMultiple(String query, List<Long> issueListIds, Pageable pageable)
             throws ParseException, IOException {
         List<Long> issueIds = new ArrayList<>();
@@ -32,7 +34,7 @@ public class IssueListSearcher {
         Query q = queryParser.parse(query);
         List<IndexReader> readers = new ArrayList<>();
         for(int i = 0; i < issueListIds.size(); i++){
-            Path path = Path.of("src/main/resources/index/issueList/"+issueListIds.get(i));
+            Path path = Path.of(indexDir+issueListIds.get(i));
             if (Files.exists(path)) {
                 Directory indexDirectory =
                         FSDirectory.open(path);

@@ -13,6 +13,9 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.IOUtils;
 
+import java.io.BufferedReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -21,11 +24,26 @@ public class MailingListIndexer {
     final private String indexDir = "src/main/resources/index/mailingList/";
 
     private Document getDocument(Email email) {
+        String body = email.getBody();
+        try {
+            Reader inputString = new StringReader(body);
+            BufferedReader br = new BufferedReader(inputString);
+            String line = "";
+            StringBuilder finalBody = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                if(!line.startsWith(">")){
+                    finalBody.append(line);
+                }
+            }
+            body = finalBody.toString();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         Document doc = new Document();
         doc.add(new Field("id", Long.toString(email.getId()), TextField.TYPE_STORED));
         doc.add(new Field("sentFrom", email.getSentFrom(), TextField.TYPE_STORED));
         doc.add(new Field("subject", email.getSubject(), TextField.TYPE_STORED));
-        doc.add(new Field("body", email.getBody(), TextField.TYPE_STORED));
+        doc.add(new Field("body", body, TextField.TYPE_STORED));
         return doc;
     }
 

@@ -19,10 +19,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class MailingListSearcher {
+    final private String indexDir = "src/main/resources/index/mailingList/";
+
     public List<Long> searchInMultiple(String query, List<Long> mailingListIds, Pageable pageable)
             throws ParseException, IOException {
         List<Long> emailIds = new ArrayList<>();
@@ -31,9 +32,10 @@ public class MailingListSearcher {
                 new String[] {"sentFrom", "subject", "body" },
                 analyzer);
         Query q = queryParser.parse(query);
+        System.out.println(q);
         List<IndexReader> readers = new ArrayList<>();
         for(int i = 0; i < mailingListIds.size(); i++){
-            Path path = Path.of("src/main/resources/index/mailingList/"+mailingListIds.get(i));
+            Path path = Path.of(indexDir+mailingListIds.get(i));
             if (Files.exists(path)) {
                 Directory indexDirectory =
                         FSDirectory.open(path);

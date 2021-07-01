@@ -70,5 +70,10 @@ public class Tag {
             email.getTags().remove(this);
             iterator.remove();
         }
+        for (Iterator<Issue> iterator = issues.iterator(); iterator.hasNext();) {
+            Issue issue = iterator.next();
+            issue.getTags().remove(this);
+            iterator.remove();
+        }
     }
 }
