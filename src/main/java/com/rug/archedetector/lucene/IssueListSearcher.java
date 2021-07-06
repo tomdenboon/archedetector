@@ -24,7 +24,7 @@ import java.util.List;
 public class IssueListSearcher {
     final private String indexDir = "src/main/resources/index/issueList/";
 
-    public List<Long> searchInMultiple(String query, List<Long> issueListIds, Pageable pageable)
+    public List<Long> searchInMultiple(String query, List<Long> issueListIds, int startIndex, int endIndex)
             throws ParseException, IOException {
         List<Long> issueIds = new ArrayList<>();
         StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -49,9 +49,6 @@ public class IssueListSearcher {
             }
             MultiReader multiReader = new MultiReader(indexReaders);
             IndexSearcher searcher = new IndexSearcher(multiReader);
-
-            int startIndex = pageable.getPageNumber() * pageable.getPageSize();
-            int endIndex = (pageable.getPageNumber() + 1) * pageable.getPageSize();
 
             TopDocs docs = searcher.search(q, endIndex);
 

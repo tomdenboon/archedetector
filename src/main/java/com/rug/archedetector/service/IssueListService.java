@@ -87,7 +87,6 @@ public class IssueListService {
             issue.setSummary(summary);
             JSONObject commentsInfo = fields.getJSONObject("comment");
             JSONArray commentsJson = commentsInfo.getJSONArray("comments");
-            List<Comment> tempComments = new ArrayList<>();
             for(int j = 0; j < commentsJson.length(); j++){
                 Comment comment = new Comment();
                 JSONObject commentJson = commentsJson.getJSONObject(j);

@@ -24,7 +24,7 @@ import java.util.List;
 public class MailingListSearcher {
     final private String indexDir = "src/main/resources/index/mailingList/";
 
-    public List<Long> searchInMultiple(String query, List<Long> mailingListIds, Pageable pageable)
+    public List<Long> searchInMultiple(String query, List<Long> mailingListIds, int startIndex, int endIndex)
             throws ParseException, IOException {
         List<Long> emailIds = new ArrayList<>();
         StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -50,8 +50,7 @@ public class MailingListSearcher {
             }
             MultiReader multiReader = new MultiReader(indexReaders);
             IndexSearcher searcher = new IndexSearcher(multiReader);
-            int startIndex = pageable.getPageNumber() * pageable.getPageSize();
-            int endIndex = (pageable.getPageNumber() + 1) * pageable.getPageSize();
+
             TopDocs docs = searcher.search(q, endIndex);
             ScoreDoc[] hits = docs.scoreDocs;
             for (int i = startIndex; i < hits.length; ++i) {
