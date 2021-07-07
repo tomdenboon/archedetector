@@ -111,7 +111,7 @@ public class IssueListService {
         return issueListRepository.findById(id).map(issueList -> {
             issueList.prepareForDelete();
             System.out.println("fetching issues");
-            List<Issue> issues = issueRepository.findByIssueListId(id);
+            List<Issue> issues = issueRepository.findByIssueListId(issueList.getId());
             System.out.println("fetching comments");
             List<Comment> comments = commentRepository.findCommentByIssueIn(issues);
             System.out.println("deleting comments");

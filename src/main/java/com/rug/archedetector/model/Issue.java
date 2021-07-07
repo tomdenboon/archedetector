@@ -29,6 +29,7 @@ public class Issue {
     private String description;
 
     @ManyToOne(targetEntity = IssueList.class)
+    @JoinColumn(name = "issue_list_id", nullable = false)
     private IssueList issueList;
 
     @ManyToMany(targetEntity = Tag.class)
