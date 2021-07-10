@@ -24,7 +24,7 @@ import java.util.List;
 public class MailingListSearcher {
     final private String indexDir = "src/main/resources/index/mailingList/";
 
-    public List<Long> searchInMultiple(String query, List<Long> mailingListIds, int startIndex, int endIndex)
+    public List<Long> searchEmail(String query, List<Long> mailingListIds, int startIndex, int endIndex)
             throws ParseException, IOException {
         List<Long> emailIds = new ArrayList<>();
         StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -35,7 +35,7 @@ public class MailingListSearcher {
         System.out.println(q);
         List<IndexReader> readers = new ArrayList<>();
         for(int i = 0; i < mailingListIds.size(); i++){
-            Path path = Path.of(indexDir+mailingListIds.get(i));
+            Path path = Path.of(indexDir+mailingListIds.get(i)+"/email");
             if (Files.exists(path)) {
                 Directory indexDirectory =
                         FSDirectory.open(path);
@@ -62,5 +62,45 @@ public class MailingListSearcher {
             multiReader.close();
         }
         return emailIds;
+    }
+
+    public List<Long> searchThreads(String query, List<Long> mailingListIds, int startIndex, int endIndex)
+            throws ParseException, IOException {
+        List<Long> threadIds = new ArrayList<>();
+        StandardAnalyzer analyzer = new StandardAnalyzer();
+        MultiFieldQueryParser queryParser = new MultiFieldQueryParser(
+                new String[] {"sentFrom", "subject", "body" },
+                analyzer);
+        Query q = queryParser.parse(query);
+        System.out.println(q);
+        System.out.println(mailingListIds);
+        List<IndexReader> readers = new ArrayList<>();
+        for(int i = 0; i < mailingListIds.size(); i++){
+            Path path = Path.of(indexDir+mailingListIds.get(i)+"/emailThread");
+            if (Files.exists(path)) {
+                Directory indexDirectory =
+                        FSDirectory.open(path);
+                readers.add(DirectoryReader.open(indexDirectory));
+            }
+        }
+        if(readers.size() > 0) {
+            IndexReader[] indexReaders = new IndexReader[readers.size()];
+            for (int i = 0; i < readers.size(); i++)
+            {
+                indexReaders[i] = readers.get(i);
+            }
+            MultiReader multiReader = new MultiReader(indexReaders);
+            IndexSearcher searcher = new IndexSearcher(multiReader);
+
+            TopDocs docs = searcher.search(q, endIndex);
+            ScoreDoc[] hits = docs.scoreDocs;
+            for (int i = startIndex; i < hits.length; ++i) {
+                int docId = hits[i].doc;
+                Document d = searcher.doc(docId);
+                threadIds.add(Long.parseLong(d.get("id")));
+            }
+            multiReader.close();
+        }
+        return threadIds;
     }
 }

@@ -13,11 +13,7 @@ import java.util.Optional;
 @Service
 public class QueryCollectionService {
     @Autowired
-    private final QueryCollectionRepository queryCollectionRepository;
-
-    public QueryCollectionService(QueryCollectionRepository queryCollectionRepository) {
-        this.queryCollectionRepository = queryCollectionRepository;
-    }
+    private QueryCollectionRepository queryCollectionRepository;
 
     public List<QueryCollection> getAll(){
         return queryCollectionRepository.findAll();

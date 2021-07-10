@@ -29,7 +29,19 @@ public class Tag {
     @ManyToMany(mappedBy = "tags")
     private Set<Issue> issues = new HashSet<>();
 
+    @JsonIgnore
+    @ManyToMany(mappedBy = "tags")
+    private Set<EmailThread> emailThreads = new HashSet<>();
+
     public Tag() {
+    }
+
+    public Set<EmailThread> getEmailThreads() {
+        return emailThreads;
+    }
+
+    public void setEmailThreads(Set<EmailThread> emailThreads) {
+        this.emailThreads = emailThreads;
     }
 
     public Set<Issue> getIssues() {
@@ -73,6 +85,11 @@ public class Tag {
         for (Iterator<Issue> iterator = issues.iterator(); iterator.hasNext();) {
             Issue issue = iterator.next();
             issue.getTags().remove(this);
+            iterator.remove();
+        }
+        for (Iterator<EmailThread> iterator = emailThreads.iterator(); iterator.hasNext();) {
+            EmailThread emailThread = iterator.next();
+            emailThread.getTags().remove(this);
             iterator.remove();
         }
     }

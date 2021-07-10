@@ -23,23 +23,15 @@ import java.util.List;
 @Service
 public class IssueListService {
     @Autowired
-    private final IssueListRepository issueListRepository;
+    private IssueListRepository issueListRepository;
 
     @Autowired
-    private final IssueRepository issueRepository;
+    private IssueRepository issueRepository;
 
     @Autowired
-    private final CommentRepository commentRepository;
+    private CommentRepository commentRepository;
 
     private final IssueListIndexer issueListIndexer = new IssueListIndexer();
-
-    public IssueListService(IssueListRepository issueListRepository,
-                            IssueRepository issueRepository,
-                            CommentRepository commentRepository) {
-        this.issueListRepository = issueListRepository;
-        this.issueRepository = issueRepository;
-        this.commentRepository = commentRepository;
-    }
 
     public List<IssueList> getAll() {
         return issueListRepository.findAll();

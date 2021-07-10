@@ -1,9 +1,6 @@
 package com.rug.archedetector.controller;
 
-import com.rug.archedetector.model.Email;
-import com.rug.archedetector.model.EmailMessageIdAndTags;
-import com.rug.archedetector.model.Issue;
-import com.rug.archedetector.model.IssueKeyAndTags;
+import com.rug.archedetector.model.*;
 import com.rug.archedetector.service.SearchService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,15 +17,24 @@ public class SearchController {
     SearchService searchService;
 
     @GetMapping("/email/search")
-    public Page<Email> searchMailingLists(@RequestParam String q, @RequestParam List<Long> mailingListIds, Pageable pageable) {
-        return searchService.queryMailingLists(q, mailingListIds, pageable);
+    public Page<Email> searchEmails(@RequestParam String q, @RequestParam List<Long> mailingListIds, Pageable pageable) {
+        return searchService.queryEmail(q, mailingListIds, pageable);
     }
 
     @GetMapping("/email/export")
-    public List<EmailMessageIdAndTags> exportSearchMailingLists(@RequestParam String q, @RequestParam List<Long> mailingListIds) {
-        return searchService.exportMailQuery(q, mailingListIds);
+    public List<EmailMessageIdAndTags> exportSearchEmails(@RequestParam String q, @RequestParam List<Long> mailingListIds) {
+        return searchService.exportEmailQuery(q, mailingListIds);
     }
 
+    @GetMapping("/email-thread/search")
+    public Page<EmailThread> searchThreads(@RequestParam String q, @RequestParam List<Long> mailingListIds, Pageable pageable) {
+        return searchService.queryThreads(q, mailingListIds, pageable);
+    }
+
+    @GetMapping("/email-thread/export")
+    public List<EmailThread> exportSearchThreads(@RequestParam String q, @RequestParam List<Long> mailingListIds, Pageable pageable) {
+        return searchService.exportThreadQuery(q, mailingListIds);
+    }
 
     @GetMapping("/issue/search")
     public Page<Issue> searchIssueLists(@RequestParam String q, @RequestParam List<Long> issueListIds, Pageable pageable) {

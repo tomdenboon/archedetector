@@ -1,13 +1,9 @@
 package com.rug.archedetector.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import javax.persistence.*;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -19,13 +15,17 @@ public class Email {
     @Column(name = "id", nullable = false)
     private long id;
 
+    @Basic
+    @Column(name = "message_id", nullable = false)
+    private String messageId;
+
     @ManyToOne(targetEntity = MailingList.class)
     @JoinColumn(name = "mailing_list_id", nullable = false)
     private MailingList mailingList;
 
-    @Basic
-    @Column(name = "message_id", nullable = false)
-    private String messageId;
+    @ManyToOne(targetEntity = EmailThread.class)
+    @JoinColumn(name = "email_thread_id")
+    private EmailThread emailThread;
 
     @Basic
     @Column(name = "in_reply_to")
@@ -57,6 +57,14 @@ public class Email {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    public EmailThread getEmailThread() {
+        return emailThread;
+    }
+
+    public void setEmailThread(EmailThread emailThread) {
+        this.emailThread = emailThread;
+    }
 
     public void addTag(Tag tag) {
         tags.add(tag);
@@ -155,7 +163,15 @@ public class Email {
     }
 
     @Override
-    public String toString() {
-        return sentFrom + "\n" + subject;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Email email = (Email) o;
+        return messageId.equals(email.messageId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(messageId);
     }
 }

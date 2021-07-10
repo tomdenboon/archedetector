@@ -21,20 +21,18 @@ import java.util.List;
 @Service
 public class EmailService {
     @Autowired
-    private final EmailRepository emailRepository;
+    private EmailRepository emailRepository;
 
     @Autowired
-    private final QueryCollectionRepository queryCollectionRepository;
-
-    public EmailService(EmailRepository emailRepository, QueryCollectionRepository queryCollectionRepository) {
-        this.queryCollectionRepository = queryCollectionRepository;
-        this.emailRepository = emailRepository;
-    }
+    private QueryCollectionRepository queryCollectionRepository;
 
     public Page<Email> getAllMailByMailingListId(Long id, Pageable pageable) {
         return emailRepository.findByMailingListId(id, pageable);
     }
 
+    public List<Email> getMailByEmailThreadId(Long id){
+        return emailRepository.findByEmailThreadId(id);
+    }
     public Page<Email> getAllMailByMailingListIds(Long[] mailingListIds, Pageable pageable) {
         return emailRepository.findByMailingListIdIn(Arrays.stream(mailingListIds).toList(), pageable);
     }

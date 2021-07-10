@@ -27,6 +27,11 @@ public class EmailController {
         return emailService.saveMail(mail);
     }
 
+    @GetMapping("/email-thread/{emailThreadId}/email")
+    public List<Email> getMailByEmailThreadId(@PathVariable(value = "emailThreadId") Long emailThreadId) {
+        return emailService.getMailByEmailThreadId(emailThreadId);
+    }
+
     @GetMapping("/mailing-list/{mailingListId}/email")
     public Page<Email> getAllMail(@PathVariable(value = "mailingListId") Long mailingListId, Pageable pageable) {
         return emailService.getAllMailByMailingListId(mailingListId, pageable);

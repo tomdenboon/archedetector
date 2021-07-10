@@ -21,21 +21,13 @@ import java.util.List;
 @Service
 public class IssueService {
     @Autowired
-    private final IssueRepository issueRepository;
+    private IssueRepository issueRepository;
 
     @Autowired
-    private final CommentRepository commentRepository;
+    private CommentRepository commentRepository;
 
     @Autowired
-    private final QueryCollectionRepository queryCollectionRepository;
-
-    public IssueService(IssueRepository issueRepository,
-                        QueryCollectionRepository queryCollectionRepository,
-                        CommentRepository commentRepository) {
-        this.commentRepository = commentRepository;
-        this.issueRepository = issueRepository;
-        this.queryCollectionRepository = queryCollectionRepository;
-    }
+    private QueryCollectionRepository queryCollectionRepository;
 
     public Page<Issue> getIssueByIssueListId(Long id, Pageable pageable) {
         return issueRepository.findByIssueListId(id, pageable);

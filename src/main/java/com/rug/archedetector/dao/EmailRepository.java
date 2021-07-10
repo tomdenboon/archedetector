@@ -13,7 +13,7 @@ import java.util.Optional;
 public interface EmailRepository extends JpaRepository<Email, Long> {
     Page<Email> findByMailingListId(Long mailingListId, Pageable pageable);
     List<Email> findByMailingListId(Long mailingListId);
-
+    List<Email> findByEmailThreadId(Long emailThreadId);
     EmailMessageIdAndTags findEmailById(Long id);
 
     Page<Email> findByMailingListIdIn(List<Long> mailingListIds, Pageable pageable);

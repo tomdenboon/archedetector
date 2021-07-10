@@ -1,6 +1,7 @@
 package com.rug.archedetector.service;
 
 import com.rug.archedetector.dao.EmailRepository;
+import com.rug.archedetector.dao.EmailThreadRepository;
 import com.rug.archedetector.dao.IssueRepository;
 import com.rug.archedetector.dao.MailingListRepository;
 import com.rug.archedetector.lucene.IssueListSearcher;
@@ -25,12 +26,15 @@ public class SearchService {
     @Autowired
     private IssueRepository issueRepository;
 
-    public Page<Email> queryMailingLists(String query, List<Long> mailingListIds, Pageable pageable){
+    @Autowired
+    private EmailThreadRepository emailThreadRepository;
+
+    public Page<Email> queryEmail(String query, List<Long> mailingListIds, Pageable pageable){
         MailingListSearcher mailingListSearcher = new MailingListSearcher();
         List<Long> emailIds = new ArrayList<>();
         List<Email> emails = new ArrayList<>();
         try{
-            emailIds = mailingListSearcher.searchInMultiple(query, mailingListIds,
+            emailIds = mailingListSearcher.searchEmail(query, mailingListIds,
                     pageable.getPageNumber() * pageable.getPageSize(), (pageable.getPageNumber() + 1) * pageable.getPageSize());
         }catch (Exception e){
             e.printStackTrace();
@@ -48,12 +52,12 @@ public class SearchService {
         return new PageImpl<>(emails, pageable, size);
     }
 
-    public List<EmailMessageIdAndTags> exportMailQuery(String query, List<Long> mailingListIds){
+    public List<EmailMessageIdAndTags> exportEmailQuery(String query, List<Long> mailingListIds){
         MailingListSearcher mailingListSearcher = new MailingListSearcher();
         List<Long> emailIds = new ArrayList<>();
         List<EmailMessageIdAndTags> emails = new ArrayList<>();
         try{
-            emailIds = mailingListSearcher.searchInMultiple(query, mailingListIds, 0, Integer.MAX_VALUE);
+            emailIds = mailingListSearcher.searchEmail(query, mailingListIds, 0, Integer.MAX_VALUE);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -62,6 +66,45 @@ public class SearchService {
             emails.add(m);
         }
         return emails;
+    }
+
+    public Page<EmailThread> queryThreads(String query, List<Long> mailingListIds, Pageable pageable){
+        MailingListSearcher mailingListSearcher = new MailingListSearcher();
+        List<Long> threatIds = new ArrayList<>();
+        List<EmailThread> emailThreads = new ArrayList<>();
+        try{
+            threatIds = mailingListSearcher.searchThreads(query, mailingListIds,
+                    pageable.getPageNumber() * pageable.getPageSize(), (pageable.getPageNumber() + 1) * pageable.getPageSize());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        for(Long id : threatIds){
+            EmailThread emailThread = emailThreadRepository.findById(id).orElseThrow();
+            emailThreads.add(emailThread);
+        }
+        int size = pageable.getPageSize() * (pageable.getPageNumber()+1);
+        if(emailThreads.size() < pageable.getPageSize()){
+            size = emailThreads.size();
+        } else {
+            size += 1;
+        }
+        return new PageImpl<>(emailThreads, pageable, size);
+    }
+
+    public List<EmailThread> exportThreadQuery(String query, List<Long> mailingListIds){
+        MailingListSearcher mailingListSearcher = new MailingListSearcher();
+        List<Long> threadIds = new ArrayList<>();
+        List<EmailThread> threads = new ArrayList<>();
+        try{
+            threadIds = mailingListSearcher.searchThreads(query, mailingListIds, 0, Integer.MAX_VALUE);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        for(Long id : threadIds){
+            EmailThread m = emailThreadRepository.findById(id).orElseThrow();
+            threads.add(m);
+        }
+        return threads;
     }
 
     public Page<Issue> queryIssueLists(String query, List<Long> issueListIds, Pageable pageable){
@@ -103,4 +146,6 @@ public class SearchService {
         }
         return issues;
     }
+
+
 }

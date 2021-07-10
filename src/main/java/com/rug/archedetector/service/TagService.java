@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 public class TagService {
     @Autowired
-    private final TagRepository tagRepository;
+    private TagRepository tagRepository;
 
     public TagService(TagRepository tagRepository) {
         this.tagRepository = tagRepository;
