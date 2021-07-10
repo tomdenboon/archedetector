@@ -23,9 +23,9 @@ public class IssueListController {
     }
 
     @PostMapping("/issue-list/add-from-apache-issues")
-    public IssueList addIssueListFromApache(@RequestBody IssueList issueList) {
+    public IssueList addIssueListFromApache(@RequestBody IssueList issueList, @RequestParam(defaultValue = "") List<String> filterUsers) {
         System.out.println(issueList.getKey() + " " + issueList.getName());
-        return issueListService.addIssueListFromApacheIssues(issueList);
+        return issueListService.addIssueListFromApacheIssues(issueList, filterUsers);
     }
 
     @DeleteMapping("/issue-list/{id}")

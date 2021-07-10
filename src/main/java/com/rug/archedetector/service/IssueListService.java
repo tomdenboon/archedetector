@@ -41,17 +41,17 @@ public class IssueListService {
         return issueListRepository.findAll();
     }
 
-    public IssueList addIssueListFromApacheIssues(IssueList issueList){
+    public IssueList addIssueListFromApacheIssues(IssueList issueList, List<String> filterUsers){
         issueListRepository.save(issueList);
         try {
-            addFromKey(issueList, 0, 200);
+            addFromKey(issueList, filterUsers, 0, 200);
         } catch(Exception e){
             e.printStackTrace();
         }
         return issueList;
     }
 
-    public void addFromKey(IssueList issueList, int startAt, int step) throws UnirestException {
+    public void addFromKey(IssueList issueList, List<String> filterUsers, int startAt, int step) throws UnirestException {
         HttpResponse<JsonNode> response = Unirest.get("https://issues.apache.org/jira/rest/api/2/search")
                 .basicAuth("tomdenboon", "SY@UD48hDCX$Uf*")
                 .header("Accept", "application/json")
@@ -88,14 +88,17 @@ public class IssueListService {
             for(int j = 0; j < commentsJson.length(); j++){
                 Comment comment = new Comment();
                 JSONObject commentJson = commentsJson.getJSONObject(j);
-                String body = commentJson.getString("body");
-                OffsetDateTime date = parser.parseOffsetDateTime(commentJson.getString("created"));
-                JSONObject author = commentJson.getJSONObject("author");
-                comment.setAuthor(author.getString("displayName"));
-                comment.setDate(date.toZonedDateTime());
-                comment.setBody(body);
-                comment.setIssue(issue);
-                comments.add(comment);
+                JSONObject authorJson = commentJson.getJSONObject("author");
+                String author = authorJson.getString("displayName");
+                if(!filterUsers.contains(author)) {
+                    String body = commentJson.getString("body");
+                    OffsetDateTime date = parser.parseOffsetDateTime(commentJson.getString("created"));
+                    comment.setIssue(issue);
+                    comment.setAuthor(author);
+                    comment.setDate(date.toZonedDateTime());
+                    comment.setBody(body);
+                    comments.add(comment);
+                }
             }
             issues.add(issue);
         }
@@ -104,7 +107,7 @@ public class IssueListService {
         commentRepository.saveAll(comments);
         issueListIndexer.index(issueList, issues, comments);
         if(offset+step<total){
-            addFromKey(issueList, offset+step, step);
+            addFromKey(issueList, filterUsers, offset+step, step);
         }
     }
 
