@@ -1,15 +1,12 @@
 package com.rug.archedetector.controller;
 
 import com.rug.archedetector.model.Comment;
-import com.rug.archedetector.model.Email;
 import com.rug.archedetector.model.Issue;
-import com.rug.archedetector.model.MailingList;
-import com.rug.archedetector.service.EmailService;
 import com.rug.archedetector.service.IssueService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,8 +27,8 @@ public class IssueController {
     }
 
     @GetMapping("/issue/{issueId}/comment")
-    public List<Comment> getCommentsByIssueId(@PathVariable(value = "issueId") Long issueId) {
-        return issueService.getCommentsByIssueId(issueId);
+    public List<Comment> getCommentsByIssueId(@PathVariable(value = "issueId") Long issueId, Sort sort) {
+        return issueService.getCommentsByIssueId(issueId, sort);
     }
 
     @GetMapping("/query-collection/{queryCollectionId}/issue")

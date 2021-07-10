@@ -11,6 +11,7 @@ import com.rug.archedetector.model.MailingList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +31,8 @@ public class EmailService {
         return emailRepository.findByMailingListId(id, pageable);
     }
 
-    public List<Email> getMailByEmailThreadId(Long id){
-        return emailRepository.findByEmailThreadId(id);
+    public List<Email> getMailByEmailThreadId(Long id, Sort sort){
+        return emailRepository.findByEmailThreadId(id, sort);
     }
     public Page<Email> getAllMailByMailingListIds(Long[] mailingListIds, Pageable pageable) {
         return emailRepository.findByMailingListIdIn(Arrays.stream(mailingListIds).toList(), pageable);

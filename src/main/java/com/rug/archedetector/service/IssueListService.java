@@ -1,5 +1,6 @@
 package com.rug.archedetector.service;
 
+import com.github.sisyphsu.dateparser.DateParser;
 import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
@@ -17,6 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,12 +58,12 @@ public class IssueListService {
                 .queryString("jql", "project = " + issueList.getKey())
                 .queryString("startAt", startAt)
                 .queryString("maxResults", step)
-                .queryString("fields", "description,comment,summary")
+                .queryString("fields", "description,comment,created,summary")
                 .asJson();
         JSONObject jsonObject = response.getBody().getObject();
         List<Issue> issues = new ArrayList<>();
         List<Comment> comments = new ArrayList<>();
-
+        DateParser parser = DateParser.newBuilder().build();
         int total = jsonObject.getInt("total");
         int offset = jsonObject.getInt("startAt");
         JSONArray issuesJson = jsonObject.getJSONArray("issues");
@@ -69,12 +73,14 @@ public class IssueListService {
             JSONObject issueJson = issuesJson.getJSONObject(i);
             String key = issueJson.getString("key");
             issue.setKey(key);
+
             JSONObject fields = issueJson.getJSONObject("fields");
             if(!fields.isNull("description")){
                 issue.setDescription(fields.getString("description"));
             }else{
                 issue.setDescription("");
             }
+            issue.setDate(parser.parseOffsetDateTime(fields.getString("created")).toZonedDateTime());
             String summary = fields.getString("summary");
             issue.setSummary(summary);
             JSONObject commentsInfo = fields.getJSONObject("comment");
@@ -83,6 +89,10 @@ public class IssueListService {
                 Comment comment = new Comment();
                 JSONObject commentJson = commentsJson.getJSONObject(j);
                 String body = commentJson.getString("body");
+                OffsetDateTime date = parser.parseOffsetDateTime(commentJson.getString("created"));
+                JSONObject author = commentJson.getJSONObject("author");
+                comment.setAuthor(author.getString("displayName"));
+                comment.setDate(date.toZonedDateTime());
                 comment.setBody(body);
                 comment.setIssue(issue);
                 comments.add(comment);

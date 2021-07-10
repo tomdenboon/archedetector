@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -33,8 +34,8 @@ public class IssueService {
         return issueRepository.findByIssueListId(id, pageable);
     }
 
-    public List<Comment> getCommentsByIssueId(Long id) {
-        return commentRepository.findCommentByIssueId(id);
+    public List<Comment> getCommentsByIssueId(Long id, Sort sort) {
+        return commentRepository.findCommentByIssueId(id, sort);
     }
 
     public Page<Issue> getIssueByQueryCollectionId(Long queryCollectionId, Pageable pageable) {

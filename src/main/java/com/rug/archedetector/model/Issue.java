@@ -6,6 +6,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,9 @@ public class Issue {
 
     @Column(name = "key", nullable = false, columnDefinition = "TEXT")
     private String key;
+
+    @Column(name = "date")
+    private ZonedDateTime date;
 
     @Column(name = "summary", nullable = false, columnDefinition = "TEXT")
     private String summary;
@@ -91,4 +95,11 @@ public class Issue {
         this.tags = tags;
     }
 
+    public ZonedDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(ZonedDateTime date) {
+        this.date = date;
+    }
 }

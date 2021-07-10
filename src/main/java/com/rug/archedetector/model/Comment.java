@@ -5,6 +5,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "comment")
@@ -17,6 +18,13 @@ public class Comment {
     @Basic
     @Column(name = "body", columnDefinition = "TEXT")
     private String body;
+
+    @Basic
+    @Column(name = "author", columnDefinition = "TEXT")
+    private String author;
+
+    @Column(name = "date")
+    private ZonedDateTime date;
 
     @JsonIgnore
     @JoinColumn(name = "issue_id", referencedColumnName = "id")
@@ -47,4 +55,19 @@ public class Comment {
         this.body = body;
     }
 
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public ZonedDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(ZonedDateTime date) {
+        this.date = date;
+    }
 }

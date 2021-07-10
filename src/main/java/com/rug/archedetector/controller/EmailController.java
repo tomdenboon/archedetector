@@ -1,12 +1,11 @@
 package com.rug.archedetector.controller;
 
 import com.rug.archedetector.model.Email;
-import com.rug.archedetector.model.MailingList;
 import com.rug.archedetector.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,8 +27,8 @@ public class EmailController {
     }
 
     @GetMapping("/email-thread/{emailThreadId}/email")
-    public List<Email> getMailByEmailThreadId(@PathVariable(value = "emailThreadId") Long emailThreadId) {
-        return emailService.getMailByEmailThreadId(emailThreadId);
+    public List<Email> getMailByEmailThreadId(@PathVariable(value = "emailThreadId") Long emailThreadId, Sort sort) {
+        return emailService.getMailByEmailThreadId(emailThreadId, sort);
     }
 
     @GetMapping("/mailing-list/{mailingListId}/email")
