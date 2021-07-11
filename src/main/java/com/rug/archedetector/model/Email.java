@@ -1,5 +1,7 @@
 package com.rug.archedetector.model;
 
+import org.hibernate.annotations.Formula;
+
 import javax.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -57,6 +59,14 @@ public class Email {
             inverseJoinColumns = @JoinColumn(name = "tag_id")
     )
     private Set<Tag> tags = new HashSet<>();
+
+    private int tagCount;
+
+    @PreUpdate
+    @PrePersist
+    public void setTagCount() {
+        this.tagCount = tags.size();
+    }
 
     public EmailThread getEmailThread() {
         return emailThread;

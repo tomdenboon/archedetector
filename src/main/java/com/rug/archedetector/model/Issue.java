@@ -43,10 +43,13 @@ public class Issue {
     )
     private Set<Tag> tags = new HashSet<>();
 
-    public Issue() {
+    private int tagCount;
+
+    @PreUpdate
+    @PrePersist
+    public void setTagCount() {
+        this.tagCount = tags.size();
     }
-
-
     public long getId() {
         return id;
     }

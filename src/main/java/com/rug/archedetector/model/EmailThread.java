@@ -33,6 +33,14 @@ public class EmailThread {
     )
     private Set<Tag> tags = new HashSet<>();
 
+    private int tagCount;
+
+    @PreUpdate
+    @PrePersist
+    public void setTagCount() {
+        this.tagCount = tags.size();
+    }
+
     public long getId() {
         return id;
     }
