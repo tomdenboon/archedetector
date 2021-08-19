@@ -22,7 +22,7 @@ public class IssueController {
     }
 
     @GetMapping("/issue-list/{issueListId}/issue")
-    public Page<Issue> getAllIssuesFromIssueList(@PathVariable(value = "issueListId") Long issueListId, Pageable pageable) {
+    public Page<Issue> getIssuesByIssueListId(@PathVariable(value = "issueListId") Long issueListId, Pageable pageable) {
         return issueService.getIssueByIssueListId(issueListId, pageable);
     }
 

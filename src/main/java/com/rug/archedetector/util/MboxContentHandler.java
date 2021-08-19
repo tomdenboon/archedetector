@@ -16,6 +16,13 @@ import java.time.format.DateTimeFormatter;
 public class MboxContentHandler extends AbstractContentHandler {
     private Email email;
 
+    /** This function returns the ZonedDateTime object from a date string in RFC-1123 format.
+     * It will also check for slight failures in the format and correct them so the string can be
+     * successfully formatted.
+     *
+     * @param dateString a date string in RFC-1123 format
+     * @return a ZonedDateTime object of the string
+     */
     private ZonedDateTime stringToDate(String dateString) {
         ZonedDateTime date = null;
         try {

@@ -51,6 +51,18 @@ public class IssueListService {
         return issueList;
     }
 
+    /**
+     * This function will use the jira api from apache to get all the issues into the database.
+     * It will find all the issues from the key of a jira issue list.
+     * Subsequently it will index all the found issues and comments for lucene.
+     * This function works recursively, but should be refactored to a for loop for more clarity
+     *
+     * @param issueList an issue list that contains a key to one of apache Jira's projects
+     * @param filterUsers if a comment contained an exact username from the list eh comment will not be added to the
+     *                    database
+     * @param startAt used for recursion
+     * @param step how many issues it queries per api call
+     */
     public void addFromKey(IssueList issueList, List<String> filterUsers, int startAt, int step) throws UnirestException {
         HttpResponse<JsonNode> response = Unirest.get("https://issues.apache.org/jira/rest/api/2/search")
                 .basicAuth("tomdenboon", "SY@UD48hDCX$Uf*")
@@ -111,7 +123,10 @@ public class IssueListService {
         }
     }
 
-
+    /**
+     * This function Deletes a issue list and its related objects from the database. First it checks if the
+     * issue list exists. Then deletes all relations to the other tables and after that it deletes itself.
+     */
     public ResponseEntity<?> delete(Long id) {
         return issueListRepository.findById(id).map(issueList -> {
             issueList.prepareForDelete();

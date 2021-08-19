@@ -1,6 +1,8 @@
 package com.rug.archedetector.lucene;
 
-import com.rug.archedetector.model.*;
+import com.rug.archedetector.model.Comment;
+import com.rug.archedetector.model.Issue;
+import com.rug.archedetector.model.IssueList;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -18,8 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IssueListIndexer {
-    final private String indexDir = "src/main/resources/index/issueList/";
+    final static public String indexDir = "src/main/resources/index/issueList/";
 
+    /**
+     * This function will create a lucene document for an issue
+     *
+     * @param issue a jira issue
+     * @param comments the comments belonging to that issue
+     * @return a lucene document of this object
+     */
     private Document getDocument(Issue issue, List<Comment> comments) {
         Document doc = new Document();
         StringBuilder commentBodies = new StringBuilder();
@@ -33,8 +42,20 @@ public class IssueListIndexer {
         return doc;
     }
 
+    /**
+     * This will add an Issue list index to the index folder. Make sure the indexDir exists in your filesystem.
+     * This function needs the issues and its comments to be in the same order otherwise it will produces
+     * faulty indices. Needs refactoring.
+     *
+     * @param issueList a jira issue list
+     * @param issues the issues belonging to that list
+     * @param comments the comments that belong to the issues
+     */
     public void index(IssueList issueList, List<Issue> issues, List<Comment> comments) {
         try {
+            if(!Files.exists(Path.of("src/main/resources/index/"))){
+                Files.createDirectory(Path.of("src/main/resources/index/"));
+            }
             Path indexPath = Path.of(indexDir + issueList.getId());
             if (!Files.exists(indexPath)) {
                 Files.createDirectory(indexPath);

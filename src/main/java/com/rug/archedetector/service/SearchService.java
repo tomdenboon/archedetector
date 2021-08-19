@@ -3,21 +3,20 @@ package com.rug.archedetector.service;
 import com.rug.archedetector.dao.EmailRepository;
 import com.rug.archedetector.dao.EmailThreadRepository;
 import com.rug.archedetector.dao.IssueRepository;
-import com.rug.archedetector.dao.MailingListRepository;
-import com.rug.archedetector.lucene.IssueListSearcher;
-import com.rug.archedetector.lucene.MailingListSearcher;
+import com.rug.archedetector.lucene.IssueListIndexer;
+import com.rug.archedetector.lucene.LuceneSearcher;
+import com.rug.archedetector.lucene.MailingListIndexer;
 import com.rug.archedetector.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
+// this service needs refactoring to remove duplicated code
 @Service
 public class SearchService {
     @Autowired
@@ -29,13 +28,26 @@ public class SearchService {
     @Autowired
     private EmailThreadRepository emailThreadRepository;
 
+    private final LuceneSearcher searcher = new LuceneSearcher();
+
+    /**
+     *
+     * @param query a string in the format of a lucene query.
+     * @param mailingListIds a list of the mailing lists the function needs to search in.
+     * @param pageable determines the returned page parameters.
+     * @return a page of result email as found by the lucene search engine.
+     */
     public Page<Email> queryEmail(String query, List<Long> mailingListIds, Pageable pageable){
-        MailingListSearcher mailingListSearcher = new MailingListSearcher();
         List<Long> emailIds = new ArrayList<>();
         List<Email> emails = new ArrayList<>();
         try{
-            emailIds = mailingListSearcher.searchEmail(query, mailingListIds,
-                    pageable.getPageNumber() * pageable.getPageSize(), (pageable.getPageNumber() + 1) * pageable.getPageSize());
+            emailIds = searcher.searchInMultipleIndices(
+                    LuceneSearcher.emailQueryParser,
+                    MailingListIndexer.mailIndexDir,
+                    query,
+                    mailingListIds,
+                    pageable.getPageNumber() * pageable.getPageSize(),
+                    (pageable.getPageNumber() + 1) * pageable.getPageSize());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -52,12 +64,22 @@ public class SearchService {
         return new PageImpl<>(emails, pageable, size);
     }
 
+    /**
+     * @param query a string in the format of a lucene query.
+     * @param mailingListIds a list of the mailing lists the function needs to search in.
+     * @return a list of result mail. Only important information of the mail is used so the function is faster.
+     */
     public List<EmailMessageIdAndTags> exportEmailQuery(String query, List<Long> mailingListIds){
-        MailingListSearcher mailingListSearcher = new MailingListSearcher();
         List<Long> emailIds = new ArrayList<>();
         List<EmailMessageIdAndTags> emails = new ArrayList<>();
         try{
-            emailIds = mailingListSearcher.searchEmail(query, mailingListIds, 0, Integer.MAX_VALUE);
+            emailIds = searcher.searchInMultipleIndices(
+                    LuceneSearcher.emailQueryParser,
+                    MailingListIndexer.mailIndexDir,
+                    query,
+                    mailingListIds,
+                    0,
+                    Integer.MAX_VALUE);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -68,17 +90,28 @@ public class SearchService {
         return emails;
     }
 
+    /**
+     * @param query a string in the format of a lucene query.
+     * @param mailingListIds a list of the mailing lists the function needs to search in.
+     * @param pageable determines the returned page parameters.
+     * @return a page of result threads as found by the lucene search engine.
+     */
     public Page<EmailThread> queryThreads(String query, List<Long> mailingListIds, Pageable pageable){
-        MailingListSearcher mailingListSearcher = new MailingListSearcher();
-        List<Long> threatIds = new ArrayList<>();
+        List<Long> threadIds = new ArrayList<>();
         List<EmailThread> emailThreads = new ArrayList<>();
         try{
-            threatIds = mailingListSearcher.searchThreads(query, mailingListIds,
-                    pageable.getPageNumber() * pageable.getPageSize(), (pageable.getPageNumber() + 1) * pageable.getPageSize());
+
+            threadIds = searcher.searchInMultipleIndices(
+                    LuceneSearcher.threadQueryParser,
+                    MailingListIndexer.threadIndexDir,
+                    query,
+                    mailingListIds,
+                    pageable.getPageNumber() * pageable.getPageSize(),
+                    (pageable.getPageNumber() + 1) * pageable.getPageSize());
         }catch (Exception e){
             e.printStackTrace();
         }
-        for(Long id : threatIds){
+        for(Long id : threadIds){
             EmailThread emailThread = emailThreadRepository.findById(id).orElseThrow();
             emailThreads.add(emailThread);
         }
@@ -91,12 +124,22 @@ public class SearchService {
         return new PageImpl<>(emailThreads, pageable, size);
     }
 
+    /**
+     * @param query a string in the format of a lucene query.
+     * @param mailingListIds a list of the mailing lists the function needs to search in.
+     * @return a list of result threads.
+     */
     public List<EmailThread> exportThreadQuery(String query, List<Long> mailingListIds){
-        MailingListSearcher mailingListSearcher = new MailingListSearcher();
         List<Long> threadIds = new ArrayList<>();
         List<EmailThread> threads = new ArrayList<>();
         try{
-            threadIds = mailingListSearcher.searchThreads(query, mailingListIds, 0, Integer.MAX_VALUE);
+            threadIds = searcher.searchInMultipleIndices(
+                    LuceneSearcher.threadQueryParser,
+                    MailingListIndexer.threadIndexDir,
+                    query,
+                    mailingListIds,
+                    0,
+                    Integer.MAX_VALUE);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -107,13 +150,25 @@ public class SearchService {
         return threads;
     }
 
+    /**
+     *
+     * @param query a string in the format of a lucene query.
+     * @param issueListIds a list of the issue lists the function needs to search in.
+     * @param pageable determines the returned page parameters.
+     * @return a page of result issues as found by the lucene search engine.
+     */
     public Page<Issue> queryIssueLists(String query, List<Long> issueListIds, Pageable pageable){
-        IssueListSearcher issueListSearcher = new IssueListSearcher();
         List<Long> issueIds = new ArrayList<>();
         List<Issue> issues = new ArrayList<>();
         try{
-            issueIds = issueListSearcher.searchInMultiple(query, issueListIds,
-                    pageable.getPageNumber() * pageable.getPageSize(),(pageable.getPageNumber() + 1) * pageable.getPageSize());
+
+            issueIds = searcher.searchInMultipleIndices(
+                    LuceneSearcher.issueQueryParser,
+                    IssueListIndexer.indexDir,
+                    query,
+                    issueListIds,
+                    pageable.getPageNumber() * pageable.getPageSize(),
+                    (pageable.getPageNumber() + 1) * pageable.getPageSize());
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -131,12 +186,22 @@ public class SearchService {
         return new PageImpl<>(issues, pageable, size);
     }
 
+    /**
+     * @param query a string in the format of a lucene query.
+     * @param issueListIds a list of the issue lists the function needs to search in.
+     * @return a list of result issues. Only important information of the issue is used so the function is faster.
+     */
     public List<IssueKeyAndTags> exportIssueQuery(String query, List<Long> issueListIds){
-        IssueListSearcher issueListSearcher = new IssueListSearcher();
         List<Long> issueIds = new ArrayList<>();
         List<IssueKeyAndTags> issues = new ArrayList<>();
         try{
-            issueIds = issueListSearcher.searchInMultiple(query, issueListIds, 0, Integer.MAX_VALUE);
+            issueIds = searcher.searchInMultipleIndices(
+                    LuceneSearcher.issueQueryParser,
+                    IssueListIndexer.indexDir,
+                    query,
+                    issueListIds,
+                    0,
+                    Integer.MAX_VALUE);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -146,6 +211,4 @@ public class SearchService {
         }
         return issues;
     }
-
-
 }

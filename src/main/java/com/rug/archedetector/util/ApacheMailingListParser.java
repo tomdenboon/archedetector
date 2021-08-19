@@ -8,7 +8,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -20,6 +21,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ApacheMailingListParser {
+    /**
+     * This function takes a mailing list object and finds all the mail from the apache mail repository.
+     *
+     * @param mailingList this mailing list has to be a mailing list from the apache foundation
+     * @return All the emails found within that mailingList
+     */
     public List<Email> getMailFromMailingList(MailingList mailingList) {
         MboxParser mboxParser = new MboxParser();
         String uri = "src/main/resources/mbox/" + mailingList.getId();
@@ -50,7 +57,15 @@ public class ApacheMailingListParser {
         return emails;
     }
 
-    public void getMboxFilesFromApacheMailingList(String url, String outFolder) {
+    /**
+     *  This function uses Jsoup to find all links in the html doc that end with mbox
+     *  it will then remove all duplicates and download all the mbox files in to the specified
+     *  folder.
+     *
+     * @param url an url to an apache mailing list example: http://mail-archives.apache.org/mod_mbox/hawq-dev/
+     * @param outFolder will create a folder filled with the mbox files found on the url
+     */
+    private void getMboxFilesFromApacheMailingList(String url, String outFolder) {
         try {
             Document doc = Jsoup.connect(url).get();
             Elements links = doc.select("td.links").select("a[href]");

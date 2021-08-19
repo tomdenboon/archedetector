@@ -14,17 +14,21 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.IOUtils;
 
-import java.io.BufferedReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MailingListIndexer {
-    final private String indexDir = "src/main/resources/index/mailingList/";
-
+    private final String indexDir = "src/main/resources/index/mailingList/";
+    final static public String threadIndexDir = "src/main/resources/index/mailingList/emailThread/";
+    final static public String mailIndexDir = "src/main/resources/index/mailingList/email/";
+    /**
+     * We have to create a document for the email to be able to index with lucene
+     *
+     * @param email an email that is not null
+     * @return a lucene document of the email object
+     */
     private Document getEmailDocument(Email email) {
         Document doc = new Document();
         doc.add(new Field("id", Long.toString(email.getId()), TextField.TYPE_STORED));
@@ -34,6 +38,13 @@ public class MailingListIndexer {
         return doc;
     }
 
+    /**
+     * We also have to create a document of the email thread.
+     *
+     * @param emailThread an email thread
+     * @param emails and its emails
+     * @return the document of the email thread
+     */
     private Document getEmailThreadDocument(EmailThread emailThread, List<Email> emails) {
         Document doc = new Document();
         StringBuilder sentFrom = new StringBuilder();
@@ -51,6 +62,15 @@ public class MailingListIndexer {
         return doc;
     }
 
+    /**
+     * Index a mailing list. By adding both the threads and emails to their respective index directory.
+     * This function needs the threads and emails to be in the same order otherwise it will produces
+     * faulty indices. Needs refactoring.
+     *
+     * @param mailingList an apache mailing list
+     * @param threads ordered list of the threads that belong to the mailing list
+     * @param emails ordered list of the emails
+     */
     public void index(MailingList mailingList, List<EmailThread> threads, List<Email> emails) {
         try {
             if(!Files.exists(Path.of("src/main/resources/index/"))){
@@ -59,9 +79,14 @@ public class MailingListIndexer {
             if(!Files.exists(Path.of(indexDir))){
                 Files.createDirectory(Path.of(indexDir));
             }
-            Files.createDirectory(Path.of(indexDir + mailingList.getId()));
-            Path indexPathEmail = Files.createDirectory(Path.of(indexDir + mailingList.getId() + "/email"));
-            Path indexPathThreads = Files.createDirectory(Path.of(indexDir + mailingList.getId() + "/emailThread"));
+            if(!Files.exists(Path.of(mailIndexDir))){
+                Files.createDirectory(Path.of(mailIndexDir));
+            }
+            if(!Files.exists(Path.of(threadIndexDir))){
+                Files.createDirectory(Path.of(threadIndexDir));
+            }
+            Path indexPathEmail = Files.createDirectory(Path.of(mailIndexDir + mailingList.getId()));
+            Path indexPathThreads = Files.createDirectory(Path.of(threadIndexDir + mailingList.getId()));
             Directory directoryEmail = FSDirectory.open(indexPathEmail);
             Directory directoryThreads = FSDirectory.open(indexPathThreads);
             Analyzer analyzer = new StandardAnalyzer();

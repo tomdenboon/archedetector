@@ -17,7 +17,7 @@ public class EmailController {
 
 
     @GetMapping("/email")
-    public Page<Email> getAllMailFromMultipleLists(@RequestParam(defaultValue = "") Long[] mailingListIds, Pageable pageable) {
+    public Page<Email> getAllMailFromMailingLists(@RequestParam(defaultValue = "") Long[] mailingListIds, Pageable pageable) {
         return emailService.getAllMailByMailingListIds(mailingListIds, pageable);
     }
 

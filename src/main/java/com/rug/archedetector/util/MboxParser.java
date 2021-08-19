@@ -6,13 +6,24 @@ import org.apache.james.mime4j.mboxiterator.CharBufferWrapper;
 import org.apache.james.mime4j.mboxiterator.MboxIterator;
 import org.apache.james.mime4j.parser.MimeStreamParser;
 
-import java.io.*;
+import java.io.File;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MboxParser {
-    public ArrayList<Email> parseFile(File mbox, MailingList mailingList) {
+    /**
+     * Returns a list of Email parsed from the specified mbox file it will
+     * also set the mailing list within the email.
+     *
+     * @param mbox only an mbox file will work
+     * @param mailingList specifies to which mailing list these emails belong
+     * @return a list of Email parsed from an mbox file
+     * @see Email
+     */
+    public List<Email> parseFile(File mbox, MailingList mailingList) {
         ArrayList<Email> emails = new ArrayList<>();
         try {
             MboxContentHandler handler = new MboxContentHandler();

@@ -15,8 +15,8 @@ public class EmailThreadController {
     EmailThreadService emailThreadService;
 
     @PostMapping("/email-thread")
-    public EmailThread saveMail(@RequestBody EmailThread mail){
-        return emailThreadService.saveMail(mail);
+    public EmailThread saveMailThread(@RequestBody EmailThread mail){
+        return emailThreadService.saveThread(mail);
     }
 
     @GetMapping("/mailing-list/{mailingListId}/email-thread")

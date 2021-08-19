@@ -20,7 +20,7 @@ public class QueryCollectionController {
     }
 
     @GetMapping("/query-collection/{id}")
-    public QueryCollection getQueryCollections(@PathVariable long id) {
+    public QueryCollection getQueryCollection(@PathVariable long id) {
         return queryCollectionService.get(id);
     }
 

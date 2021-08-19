@@ -37,6 +37,15 @@ public class MailingListService {
         return mailingListRepository.findAll();
     }
 
+    /**
+     * This function retrieves the mail from the mailing list url based on the filters.
+     * Then it will use some logic to thread them and store both the mail and the threads
+     * in the database
+     *
+     *
+     * @param mailinglist an apache mailing list which has to contain an url to the apache mailing list
+     * @param filters a list of strings and only filters if it matches a string in EmailFilter filterMail
+     */
     public MailingList addFromApacheArchiveWithFilters(MailingList mailinglist, String[] filters) {
         mailinglist = mailingListRepository.save(mailinglist);
         List<Email> emails = apacheMailingListParser.getMailFromMailingList(mailinglist);
@@ -82,7 +91,7 @@ public class MailingListService {
                 if(date == null || email.getDate().isAfter(date)){
                     date = email.getDate();
                 }
-                if(first == null || email.getDate().isBefore(date)){
+                if(first == null || email.getDate().isBefore(first)){
                     first = email.getDate();
                     firstSubject = email.getSubject();
                 }
@@ -100,6 +109,10 @@ public class MailingListService {
         return mailinglist;
     }
 
+    /**
+     * This function Deletes a mailing list and its related objects from the database. First it checks if the
+     * mailining list exists. Then deletes all relations to the other tables and after that it deletes itself.
+     */
     public ResponseEntity<?> delete(Long id) {
         return mailingListRepository.findById(id).map(mailingList -> {
             mailingList.prepareForDelete();

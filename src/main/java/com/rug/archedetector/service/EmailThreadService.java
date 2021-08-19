@@ -28,7 +28,7 @@ public class EmailThreadService {
         return emailThreadRepository.findByMailingListId(id, pageable);
     }
 
-    public EmailThread saveMail(EmailThread emailThread) {
+    public EmailThread saveThread(EmailThread emailThread) {
         return emailThreadRepository.save(emailThread);
     }
 
