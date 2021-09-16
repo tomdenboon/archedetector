@@ -1,7 +1,5 @@
 package com.rug.archedetector.model;
 
-import org.hibernate.annotations.Formula;
-
 import javax.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -38,7 +36,8 @@ public class Email {
     private String sentFrom;
 
     @Basic
-    @Column(name = "subject", columnDefinition = "TEXT")
+    @Column(name = "subject")
+    @Lob
     private String subject;
 
 
@@ -46,11 +45,13 @@ public class Email {
     private ZonedDateTime date;
 
     @Basic
-    @Column(name = "body", columnDefinition = "TEXT")
+    @Column(name = "body")
+    @Lob
     private String body;
 
     @Basic
-    @Column(name = "raw", columnDefinition = "TEXT")
+    @Column(name = "raw")
+    @Lob
     private String raw;
 
     @ManyToMany(targetEntity = Tag.class)

@@ -35,3 +35,7 @@ ledgerware/static/*### VS Code ###
 /src/main/resources/mbox/
 /src/main/resources/index/mailingList/
 /src/main/resources/index/issueList/
+
+# Ignore external configuration properties added by users or admins.
+config/*
+!config/TEMPLATE.properties

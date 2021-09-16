@@ -1,0 +1,51 @@
+version: '3.8'
+
+# This Docker Compose file defines a set of services that can be run by invoking
+# the "docker-compose up" command in the same directory as this file. This will
+# initialize all the defined services and expose them according to the "ports"
+# properties, so that the main Java application (or the user directly) can
+# connect to them.
+
+services:
+  # The postgres database that is used.
+  db:
+    image: postgres:latest
+    container_name: postgres-arch
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: arch_dev
+      POSTGRES_PASSWORD: arch_dev_pass
+      POSTGRES_DB: arch
+      PGDATA: /data/postgres
+    ports:
+      - "54321:5432"
+    volumes:
+      - dbdata-arch:/data/postgres
+    networks:
+      - network-arch
+
+  # Admin site for postgres. Connect via http://localhost:5050
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin-arch
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    depends_on:
+      - db
+    volumes:
+      - dbdata-arch:/data/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - network-arch
+
+networks:
+  network-arch:
+    driver: bridge
+
+volumes:
+  dbdata-arch:
+    name: arch-db-data
+    driver: local

@@ -80,14 +80,15 @@
 			<version>2.9.0</version>
 		</dependency>
 		<dependency>
-			<groupId>com.mashape.unirest</groupId>
-			<artifactId>unirest-java</artifactId>
-			<version>1.4.9</version>
-		</dependency>
-		<dependency>
 			<groupId>com.github.sisyphsu</groupId>
 			<artifactId>dateparser</artifactId>
 			<version>1.0.7</version>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.20</version>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 </project>

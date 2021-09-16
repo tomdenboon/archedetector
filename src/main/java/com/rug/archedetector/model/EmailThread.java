@@ -20,7 +20,8 @@ public class EmailThread {
     @Column(name = "date")
     private ZonedDateTime date;
 
-    @Column(name = "subject", columnDefinition = "TEXT")
+    @Column(name = "subject")
+    @Lob
     private String subject;
 
     @Column(name = "size")

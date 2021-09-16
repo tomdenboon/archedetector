@@ -19,7 +19,7 @@ public class IssueList {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "key", nullable = false)
+    @Column(name = "andrewKey", nullable = false)
     private String key;
 
     @JsonIgnore

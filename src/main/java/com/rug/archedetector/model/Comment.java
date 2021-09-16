@@ -16,7 +16,8 @@ public class Comment {
     private long id;
 
     @Basic
-    @Column(name = "body", columnDefinition = "TEXT")
+    @Column(name = "body")
+    @Lob
     private String body;
 
     @Basic

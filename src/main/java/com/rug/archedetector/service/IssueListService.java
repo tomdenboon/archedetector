@@ -1,31 +1,39 @@
 package com.rug.archedetector.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.sisyphsu.dateparser.DateParser;
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.JsonNode;
-import com.mashape.unirest.http.Unirest;
-import com.mashape.unirest.http.exceptions.UnirestException;
 import com.rug.archedetector.dao.CommentRepository;
 import com.rug.archedetector.dao.IssueListRepository;
 import com.rug.archedetector.dao.IssueRepository;
 import com.rug.archedetector.exceptions.ResourceNotFoundException;
 import com.rug.archedetector.lucene.IssueListIndexer;
-import com.rug.archedetector.lucene.MailingListIndexer;
-import com.rug.archedetector.model.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.rug.archedetector.model.Comment;
+import com.rug.archedetector.model.Issue;
+import com.rug.archedetector.model.IssueList;
+import com.rug.archedetector.util.UriBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.OffsetDateTime;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class IssueListService {
+    private static final String APACHE_JIRA_API_URL = "https://issues.apache.org/jira/rest/api/2/search";
+
     @Autowired
     private IssueListRepository issueListRepository;
 
@@ -35,12 +43,22 @@ public class IssueListService {
     @Autowired
     private CommentRepository commentRepository;
 
+    @Value("${apache-issues.username}")
+    private String apacheIssuesUsername;
+
+    @Value("${apache-issues.password}")
+    private String apacheIssuesPassword;
+
+    private final HttpClient httpClient = HttpClient.newHttpClient();
+    private final ObjectMapper mapper = new ObjectMapper();
+
     private final IssueListIndexer issueListIndexer = new IssueListIndexer();
 
     public List<IssueList> getAll() {
         return issueListRepository.findAll();
     }
 
+    @Transactional
     public IssueList addIssueListFromApacheIssues(IssueList issueList, List<String> filterUsers){
         issueListRepository.save(issueList);
         try {
@@ -63,48 +81,77 @@ public class IssueListService {
      * @param startAt used for recursion
      * @param step how many issues it queries per api call
      */
-    public void addFromKey(IssueList issueList, List<String> filterUsers, int startAt, int step) throws UnirestException {
-        HttpResponse<JsonNode> response = Unirest.get("https://issues.apache.org/jira/rest/api/2/search")
-                .basicAuth("tomdenboon", "SY@UD48hDCX$Uf*")
+    @Transactional
+    public void addFromKey(IssueList issueList, List<String> filterUsers, int startAt, int step) {
+        try {
+            this.sendRequest(issueList.getKey(), startAt, step)
+                    .thenAccept(obj -> this.parseAndSaveIssues(obj, issueList, filterUsers, step));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Requests a set of issues from the Jira API.
+     * @param projectKey The identifier for the project to fetch issues from.
+     * @param startAt The offset for search pagination.
+     * @param step The number of items to fetch.
+     * @return A future that, when complete, returns the JSON object that
+     * contains the response from the API.
+     * @throws IOException If an error occurs while sending the request.
+     */
+    private CompletableFuture<ObjectNode> sendRequest(String projectKey, int startAt, int step) throws IOException {
+        final String authHeader = "Basic " + Base64.getEncoder().encodeToString((apacheIssuesUsername + ":" + apacheIssuesPassword).getBytes());
+        var request = HttpRequest.newBuilder(UriBuilder.buildParams(APACHE_JIRA_API_URL, Map.of(
+                        "jql", "project = " + projectKey,
+                        "startAt", startAt,
+                        "maxResults", step,
+                        "fields", "description,comment,created,summary"
+                )))
+                .header("Authorization", authHeader)
                 .header("Accept", "application/json")
-                .queryString("jql", "project = " + issueList.getKey())
-                .queryString("startAt", startAt)
-                .queryString("maxResults", step)
-                .queryString("fields", "description,comment,created,summary")
-                .asJson();
-        JSONObject jsonObject = response.getBody().getObject();
+                .GET().build();
+        return this.httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+                .thenApply(in -> {
+                    try {
+                        return this.mapper.readValue(in.body(), ObjectNode.class);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                });
+    }
+
+    private void parseAndSaveIssues(ObjectNode obj, IssueList issueList, List<String> filterUsers, int step) {
         List<Issue> issues = new ArrayList<>();
         List<Comment> comments = new ArrayList<>();
         DateParser parser = DateParser.newBuilder().build();
-        int total = jsonObject.getInt("total");
-        int offset = jsonObject.getInt("startAt");
-        JSONArray issuesJson = jsonObject.getJSONArray("issues");
-        for (int i = 0; i < issuesJson.length(); i++) {
+        int total = obj.get("total").asInt();
+        int offset = obj.get("startAt").asInt();
+        ArrayNode issuesArray = obj.withArray("issues");
+        for (var issueObj : issuesArray) {
             Issue issue = new Issue();
             issue.setIssueList(issueList);
-            JSONObject issueJson = issuesJson.getJSONObject(i);
-            String key = issueJson.getString("key");
+            String key = issueObj.get("key").asText();
             issue.setKey(key);
 
-            JSONObject fields = issueJson.getJSONObject("fields");
-            if(!fields.isNull("description")){
-                issue.setDescription(fields.getString("description"));
+            var fields = issueObj.get("fields");
+            if(!fields.get("description").isNull()){
+                issue.setDescription(fields.get("description").asText());
             }else{
                 issue.setDescription("");
             }
-            issue.setDate(parser.parseOffsetDateTime(fields.getString("created")).toZonedDateTime());
-            String summary = fields.getString("summary");
-            issue.setSummary(summary);
-            JSONObject commentsInfo = fields.getJSONObject("comment");
-            JSONArray commentsJson = commentsInfo.getJSONArray("comments");
-            for(int j = 0; j < commentsJson.length(); j++){
+            issue.setDate(parser.parseOffsetDateTime(fields.get("created").asText()).toZonedDateTime());
+            issue.setSummary(fields.get("summary").asText());
+            var commentsInfo = fields.get("comment");
+            ArrayNode commentsJson = commentsInfo.withArray("comments");
+            for (var commentObj : commentsJson) {
                 Comment comment = new Comment();
-                JSONObject commentJson = commentsJson.getJSONObject(j);
-                JSONObject authorJson = commentJson.getJSONObject("author");
-                String author = authorJson.getString("displayName");
+                var authorJson = commentObj.get("author");
+                String author = authorJson.get("displayName").asText();
                 if(!filterUsers.contains(author)) {
-                    String body = commentJson.getString("body");
-                    OffsetDateTime date = parser.parseOffsetDateTime(commentJson.getString("created"));
+                    String body = commentObj.get("body").asText();
+                    OffsetDateTime date = parser.parseOffsetDateTime(commentObj.get("created").asText());
                     comment.setIssue(issue);
                     comment.setAuthor(author);
                     comment.setDate(date.toZonedDateTime());

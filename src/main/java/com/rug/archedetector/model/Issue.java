@@ -1,14 +1,8 @@
 package com.rug.archedetector.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import javax.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -20,16 +14,19 @@ public class Issue {
     @Column(name = "id", nullable = false)
     private long id;
 
-    @Column(name = "key", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "andrewKey", nullable = false)
+    @Lob
     private String key;
 
     @Column(name = "date")
     private ZonedDateTime date;
 
-    @Column(name = "summary", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "summary", nullable = false)
+    @Lob
     private String summary;
 
-    @Column(name = "description", columnDefinition = "TEXT")
+    @Column(name = "description")
+    @Lob
     private String description;
 
     @ManyToOne(targetEntity = IssueList.class)

@@ -1,8 +1,6 @@
 package com.rug.archedetector.controller;
 
-import com.rug.archedetector.model.MailingList;
 import com.rug.archedetector.model.Tag;
-import com.rug.archedetector.service.MailingListService;
 import com.rug.archedetector.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
