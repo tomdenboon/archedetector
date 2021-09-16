@@ -13,7 +13,7 @@ import com.rug.archedetector.model.Comment;
 import com.rug.archedetector.model.Issue;
 import com.rug.archedetector.model.IssueList;
 import com.rug.archedetector.util.UriBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,17 +31,13 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Service
+@RequiredArgsConstructor
 public class IssueListService {
     private static final String APACHE_JIRA_API_URL = "https://issues.apache.org/jira/rest/api/2/search";
 
-    @Autowired
-    private IssueListRepository issueListRepository;
-
-    @Autowired
-    private IssueRepository issueRepository;
-
-    @Autowired
-    private CommentRepository commentRepository;
+    private final IssueListRepository issueListRepository;
+    private final IssueRepository issueRepository;
+    private final CommentRepository commentRepository;
 
     @Value("${apache-issues.username}")
     private String apacheIssuesUsername;
