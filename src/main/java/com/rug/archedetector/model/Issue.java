@@ -14,7 +14,7 @@ public class Issue {
     @Column(name = "id", nullable = false)
     private long id;
 
-    @Column(name = "andrewKey", nullable = false)
+    @Column(name = "issue_key", nullable = false)
     @Lob
     private String key;
 
