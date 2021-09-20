@@ -38,4 +38,5 @@ ledgerware/static/*### VS Code ###
 
 # Ignore external configuration properties added by users or admins.
 config/*
+# Specifically don't ignore the template properties file. It helps to document.
 !config/TEMPLATE.properties
