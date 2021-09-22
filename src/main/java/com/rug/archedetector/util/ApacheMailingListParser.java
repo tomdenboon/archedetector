@@ -8,19 +8,23 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ApacheMailingListParser {
+    private static final Path MBOX_DIR = Path.of("mbox");
+
     /**
      * This function takes a mailing list object and finds all the mail from the apache mail repository.
      *
@@ -29,30 +33,26 @@ public class ApacheMailingListParser {
      */
     public List<Email> getMailFromMailingList(MailingList mailingList) {
         MboxParser mboxParser = new MboxParser();
-        String uri = "src/main/resources/mbox/" + mailingList.getId();
-        Path mboxPath = Paths.get(uri);
+        Path mailingListDir = MBOX_DIR.resolve(String.valueOf(mailingList.getId()));
         try {
-            if (!Files.exists(mboxPath)) {
-                Files.createDirectory(mboxPath);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Could not create folder");
+            Files.createDirectories(mailingListDir);
+        } catch (IOException e) {
+            System.err.println("Could not create " + mailingListDir);
+            return List.of();
         }
-        getMboxFilesFromApacheMailingList(mailingList.getUrl(), uri);
-        File mboxFolder = new File(uri);
+        getMboxFilesFromApacheMailingList(mailingList.getUrl(), mailingListDir);
         List<Email> emails = new ArrayList<>();
-        for (File file : Objects.requireNonNull(mboxFolder.listFiles())) {
-            if (file.isFile()) {
-                emails.addAll(mboxParser.parseFile(file, mailingList));
-            }
+        try (var stream = Files.list(mailingListDir)) {
+            stream.filter(Files::isRegularFile).forEach(file -> emails.addAll(mboxParser.parseFile(file.toFile(), mailingList)));
+        } catch (IOException e) {
+            System.err.println("Could not obtain list of files under " + mailingListDir);
+            return List.of();
         }
         try {
             System.gc();
-            IOUtils.rm(mboxPath);
+            IOUtils.rm(mailingListDir);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("not deleting");
         }
         return emails;
     }
@@ -63,9 +63,9 @@ public class ApacheMailingListParser {
      *  folder.
      *
      * @param url an url to an apache mailing list example: http://mail-archives.apache.org/mod_mbox/hawq-dev/
-     * @param outFolder will create a folder filled with the mbox files found on the url
+     * @param outDir will create a folder filled with the mbox files found on the url
      */
-    private void getMboxFilesFromApacheMailingList(String url, String outFolder) {
+    private void getMboxFilesFromApacheMailingList(String url, Path outDir) {
         try {
             Document doc = Jsoup.connect(url).get();
             Elements links = doc.select("td.links").select("a[href]");
@@ -81,7 +81,7 @@ public class ApacheMailingListParser {
             for (String link : mboxLinks) {
                 URL mbox = new URL(url + link);
                 ReadableByteChannel mboxRbc = Channels.newChannel(mbox.openStream());
-                FileOutputStream fos = new FileOutputStream(outFolder + "/" + link);
+                FileOutputStream fos = new FileOutputStream(outDir.resolve(link).toFile());
                 fos.getChannel().transferFrom(mboxRbc, 0, Long.MAX_VALUE);
                 fos.close();
             }

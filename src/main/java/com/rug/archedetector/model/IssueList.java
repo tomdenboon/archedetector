@@ -1,15 +1,17 @@
 package com.rug.archedetector.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.Set;
 
 @Entity
 @Table(name = "issue_list")
+@Getter
 public class IssueList {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,46 +19,21 @@ public class IssueList {
     private long id;
 
     @Column(name = "name", nullable = false)
+    @Setter
     private String name;
 
     @Column(name = "issue_list_key", nullable = false)
+    @Setter
     private String key;
 
     @JsonIgnore
     @ManyToMany(mappedBy = "issueLists")
+    @Setter
     private Set<QueryCollection> queryCollections = new HashSet<>();
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getKey() {
-        return key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
-    }
-
-    public Set<QueryCollection> getQueryCollections() {
-        return queryCollections;
-    }
-
-    public void setQueryCollections(Set<QueryCollection> queryCollections) {
-        this.queryCollections = queryCollections;
-    }
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "issueList", orphanRemoval = true, cascade = CascadeType.ALL)
+    @JsonIgnore
+    private Set<Issue> issues;
 
     public void prepareForDelete(){
         for (Iterator<QueryCollection> iterator = queryCollections.iterator(); iterator.hasNext();) {

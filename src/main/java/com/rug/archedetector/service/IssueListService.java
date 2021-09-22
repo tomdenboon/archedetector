@@ -7,17 +7,21 @@ import com.github.sisyphsu.dateparser.DateParser;
 import com.rug.archedetector.dao.CommentRepository;
 import com.rug.archedetector.dao.IssueListRepository;
 import com.rug.archedetector.dao.IssueRepository;
-import com.rug.archedetector.exceptions.ResourceNotFoundException;
 import com.rug.archedetector.lucene.IssueListIndexer;
 import com.rug.archedetector.model.Comment;
 import com.rug.archedetector.model.Issue;
 import com.rug.archedetector.model.IssueList;
 import com.rug.archedetector.util.UriBuilder;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
@@ -29,15 +33,18 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class IssueListService {
     private static final String APACHE_JIRA_API_URL = "https://issues.apache.org/jira/rest/api/2/search";
 
     private final IssueListRepository issueListRepository;
     private final IssueRepository issueRepository;
     private final CommentRepository commentRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Value("${apache-issues.username}")
     private String apacheIssuesUsername;
@@ -55,14 +62,18 @@ public class IssueListService {
     }
 
     @Transactional
-    public IssueList addIssueListFromApacheIssues(IssueList issueList, List<String> filterUsers){
-        issueListRepository.save(issueList);
+    public IssueList createIssueList(IssueList issueList) {
+        return this.issueListRepository.save(issueList);
+    }
+
+    @Transactional
+    @Async
+    public void addIssuesToList(IssueList issueList, List<String> usernameBlacklist) {
         try {
-            addFromKey(issueList, filterUsers, 0, 200);
+            addFromKey(issueList, usernameBlacklist, 0, 200);
         } catch(Exception e){
             e.printStackTrace();
         }
-        return issueList;
     }
 
     /**
@@ -81,8 +92,8 @@ public class IssueListService {
     public void addFromKey(IssueList issueList, List<String> filterUsers, int startAt, int step) {
         try {
             this.sendRequest(issueList.getKey(), startAt, step)
-                    .thenAccept(obj -> this.parseAndSaveIssues(obj, issueList, filterUsers, step));
-        } catch (IOException e) {
+                    .thenAccept(obj -> this.parseAndSaveIssues(obj, issueList, filterUsers, step)).get();
+        } catch (IOException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }
@@ -98,12 +109,13 @@ public class IssueListService {
      */
     private CompletableFuture<ObjectNode> sendRequest(String projectKey, int startAt, int step) throws IOException {
         final String authHeader = "Basic " + Base64.getEncoder().encodeToString((apacheIssuesUsername + ":" + apacheIssuesPassword).getBytes());
-        var request = HttpRequest.newBuilder(UriBuilder.buildParams(APACHE_JIRA_API_URL, Map.of(
-                        "jql", "project = " + projectKey,
-                        "startAt", startAt,
-                        "maxResults", step,
-                        "fields", "description,comment,created,summary"
-                )))
+        var uri = UriBuilder.buildParams(APACHE_JIRA_API_URL, Map.of(
+                "jql", "project = " + projectKey,
+                "startAt", startAt,
+                "maxResults", step,
+                "fields", "description,comment,created,summary"
+        ));
+        var request = HttpRequest.newBuilder(uri)
                 .header("Authorization", authHeader)
                 .header("Accept", "application/json")
                 .GET().build();
@@ -128,8 +140,7 @@ public class IssueListService {
         for (var issueObj : issuesArray) {
             Issue issue = new Issue();
             issue.setIssueList(issueList);
-            String key = issueObj.get("key").asText();
-            issue.setKey(key);
+            issue.setKey(issueObj.get("key").asText());
 
             var fields = issueObj.get("fields");
             if(!fields.get("description").isNull()){
@@ -140,19 +151,20 @@ public class IssueListService {
             issue.setDate(parser.parseOffsetDateTime(fields.get("created").asText()).toZonedDateTime());
             issue.setSummary(fields.get("summary").asText());
             var commentsInfo = fields.get("comment");
+            if (commentsInfo == null || commentsInfo.isNull()) continue;
             ArrayNode commentsJson = commentsInfo.withArray("comments");
             for (var commentObj : commentsJson) {
-                Comment comment = new Comment();
                 var authorJson = commentObj.get("author");
                 String author = authorJson.get("displayName").asText();
                 if(!filterUsers.contains(author)) {
                     String body = commentObj.get("body").asText();
                     OffsetDateTime date = parser.parseOffsetDateTime(commentObj.get("created").asText());
-                    comment.setIssue(issue);
-                    comment.setAuthor(author);
-                    comment.setDate(date.toZonedDateTime());
-                    comment.setBody(body);
-                    comments.add(comment);
+                    comments.add(new Comment(
+                            issue,
+                            author,
+                            date.toZonedDateTime(),
+                            body
+                    ));
                 }
             }
             issues.add(issue);
@@ -170,21 +182,19 @@ public class IssueListService {
      * This function Deletes a issue list and its related objects from the database. First it checks if the
      * issue list exists. Then deletes all relations to the other tables and after that it deletes itself.
      */
+    @Transactional
     public ResponseEntity<?> delete(Long id) {
-        return issueListRepository.findById(id).map(issueList -> {
+        return this.issueListRepository.findById(id).map(issueList -> {
             issueList.prepareForDelete();
-            System.out.println("fetching issues");
-            List<Issue> issues = issueRepository.findByIssueListId(issueList.getId());
-            System.out.println("fetching comments");
-            List<Comment> comments = commentRepository.findCommentByIssueIn(issues);
-            System.out.println("deleting comments");
-            commentRepository.deleteAll(comments);
-            System.out.println("deleting issues");
-            issueRepository.deleteAll(issues);
-            System.out.println("deleting list");
-            issueListRepository.delete(issueList);
-            issueListIndexer.deleteIndex(issueList);
-            return ResponseEntity.ok().build();
-        }).orElseThrow(() -> new ResourceNotFoundException("id " + id + " not found"));
+            // We use plain SQL since it is much faster for large operations.
+            this.jdbcTemplate.update(
+                    "DELETE FROM comment c WHERE c.issue_id IN (SELECT id FROM issue WHERE issue_list_id = ?)",
+                    id
+            );
+            this.jdbcTemplate.update("DELETE FROM issue WHERE issue_list_id = ?", id);
+            this.issueListRepository.delete(issueList);
+            this.issueListIndexer.deleteIndex(issueList);
+            return ResponseEntity.noContent().build();
+        }).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 }

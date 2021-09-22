@@ -164,7 +164,7 @@ public class SearchService {
 
             issueIds = searcher.searchInMultipleIndices(
                     LuceneSearcher.issueQueryParser,
-                    IssueListIndexer.indexDir,
+                    IssueListIndexer.ISSUES_LIST_INDEX_DIR.toString(),
                     query,
                     issueListIds,
                     pageable.getPageNumber() * pageable.getPageSize(),
@@ -197,7 +197,7 @@ public class SearchService {
         try{
             issueIds = searcher.searchInMultipleIndices(
                     LuceneSearcher.issueQueryParser,
-                    IssueListIndexer.indexDir,
+                    IssueListIndexer.ISSUES_LIST_INDEX_DIR.toString(),
                     query,
                     issueListIds,
                     0,

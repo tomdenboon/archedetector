@@ -1,5 +1,7 @@
 package com.rug.archedetector.model;
 
+import lombok.Getter;
+
 import javax.persistence.*;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -8,6 +10,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "issue")
+@Getter
 public class Issue {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +36,9 @@ public class Issue {
     @JoinColumn(name = "issue_list_id", nullable = false)
     private IssueList issueList;
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "issue", orphanRemoval = true, cascade = CascadeType.ALL)
+    private Set<Comment> comments = new HashSet<>();
+
     @ManyToMany(targetEntity = Tag.class)
     @JoinTable(name = "issue_tag",
             joinColumns = @JoinColumn(name = "issue_id"),
@@ -47,56 +53,29 @@ public class Issue {
     public void setTagCount() {
         this.tagCount = tags.size();
     }
-    public long getId() {
-        return id;
-    }
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public String getKey() {
-        return key;
     }
 
     public void setKey(String key) {
         this.key = key;
     }
 
-    public String getSummary() {
-        return summary;
-    }
-
     public void setSummary(String summary) {
         this.summary = summary;
-    }
-
-    public String getDescription() {
-        return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
     }
 
-    public IssueList getIssueList() {
-        return issueList;
-    }
-
     public void setIssueList(IssueList issueList) {
         this.issueList = issueList;
     }
 
-    public Set<Tag> getTags() {
-        return tags;
-    }
-
     public void setTags(Set<Tag> tags) {
         this.tags = tags;
-    }
-
-    public ZonedDateTime getDate() {
-        return date;
     }
 
     public void setDate(ZonedDateTime date) {

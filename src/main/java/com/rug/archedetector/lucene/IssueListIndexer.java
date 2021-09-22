@@ -13,14 +13,24 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.IOUtils;
+import org.springframework.stereotype.Component;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class IssueListIndexer {
-    final static public String indexDir = "src/main/resources/index/issueList/";
+    /**
+     * The directory in which all indexes are stored.
+     */
+    private static final Path INDEX_DIR = Path.of("index");
+
+    /**
+     * The directory in which issue list indexes are stored.
+     */
+    public static final Path ISSUES_LIST_INDEX_DIR = INDEX_DIR.resolve("issueList");
 
     /**
      * This function will create a lucene document for an issue
@@ -53,14 +63,9 @@ public class IssueListIndexer {
      */
     public void index(IssueList issueList, List<Issue> issues, List<Comment> comments) {
         try {
-            if(!Files.exists(Path.of("src/main/resources/index/"))){
-                Files.createDirectory(Path.of("src/main/resources/index/"));
-            }
-            Path indexPath = Path.of(indexDir + issueList.getId());
-            if (!Files.exists(indexPath)) {
-                Files.createDirectory(indexPath);
-            }
-            Directory directory = FSDirectory.open(indexPath);
+            Path issueListDir = ISSUES_LIST_INDEX_DIR.resolve(String.valueOf(issueList.getId()));
+            Files.createDirectories(issueListDir);
+            Directory directory = FSDirectory.open(issueListDir);
             Analyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig config = new IndexWriterConfig(analyzer);
             IndexWriter writer = new IndexWriter(directory, config);
@@ -81,11 +86,9 @@ public class IssueListIndexer {
 
     public void deleteIndex(IssueList issueList) {
         try {
-            Path indexPath = Path.of(indexDir + issueList.getId());
-            IOUtils.rm(indexPath);
+            IOUtils.rm(ISSUES_LIST_INDEX_DIR.resolve(String.valueOf(issueList.getId())));
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Index not deleting");
         }
     }
 }

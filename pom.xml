@@ -16,6 +16,14 @@
 	<properties>
 		<java.version>16</java.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>atlassian-public</id>
+			<url>https://m2proxy.atlassian.com/repository/public</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -84,6 +92,7 @@
 			<artifactId>dateparser</artifactId>
 			<version>1.0.7</version>
 		</dependency>
+		<!-- Lombok API for getters, setters, and more useful annotations. -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>

@@ -40,3 +40,7 @@ ledgerware/static/*### VS Code ###
 config/*
 # Specifically don't ignore the template properties file. It helps to document.
 !config/TEMPLATE.properties
+
+# Ignore generated mailing list and issue files.
+mbox/*
+index/*

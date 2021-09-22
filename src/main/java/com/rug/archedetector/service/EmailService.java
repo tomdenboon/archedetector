@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,21 +28,26 @@ public class EmailService {
     @Autowired
     private QueryCollectionRepository queryCollectionRepository;
 
+    @Transactional(readOnly = true)
     public Page<Email> getAllMailByMailingListId(Long id, Pageable pageable) {
         return emailRepository.findByMailingListId(id, pageable);
     }
 
+    @Transactional(readOnly = true)
     public List<Email> getMailByEmailThreadId(Long id, Sort sort){
         return emailRepository.findByEmailThreadId(id, sort);
     }
+    @Transactional(readOnly = true)
     public Page<Email> getAllMailByMailingListIds(Long[] mailingListIds, Pageable pageable) {
         return emailRepository.findByMailingListIdIn(Arrays.stream(mailingListIds).toList(), pageable);
     }
 
+    @Transactional
     public Email saveMail(Email email) {
         return emailRepository.save(email);
     }
 
+    @Transactional(readOnly = true)
     public Page<Email> getMailByQueryCollectionId(Long queryCollectionId, Pageable pageable) {
         return queryCollectionRepository.findById(queryCollectionId).map(queryCollection -> {
             List<Long> mailingIds = new ArrayList<>();

@@ -3,7 +3,7 @@ package com.rug.archedetector.controller;
 import com.rug.archedetector.model.Comment;
 import com.rug.archedetector.model.Issue;
 import com.rug.archedetector.service.IssueService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class IssueController {
-    @Autowired
-    IssueService issueService;
+    private final IssueService issueService;
 
     @PostMapping("/issue")
     public Issue saveIssue(@RequestBody Issue issue){
