@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MailingListIndexer {
-    private final String indexDir = "src/main/resources/index/mailingList/";
-    final static public String threadIndexDir = "src/main/resources/index/mailingList/emailThread/";
-    final static public String mailIndexDir = "src/main/resources/index/mailingList/email/";
+    private static final Path MAILING_LIST_INDEX_DIR = Path.of("index", "mailingList");
+    public static final Path THREAD_INDEX_DIR = MAILING_LIST_INDEX_DIR.resolve("emailThread");
+    public static final Path EMAIL_INDEX_DIR = MAILING_LIST_INDEX_DIR.resolve("email");
     /**
      * We have to create a document for the email to be able to index with lucene
      *
@@ -73,20 +73,10 @@ public class MailingListIndexer {
      */
     public void index(MailingList mailingList, List<EmailThread> threads, List<Email> emails) {
         try {
-            if(!Files.exists(Path.of("src/main/resources/index/"))){
-                Files.createDirectory(Path.of("src/main/resources/index/"));
-            }
-            if(!Files.exists(Path.of(indexDir))){
-                Files.createDirectory(Path.of(indexDir));
-            }
-            if(!Files.exists(Path.of(mailIndexDir))){
-                Files.createDirectory(Path.of(mailIndexDir));
-            }
-            if(!Files.exists(Path.of(threadIndexDir))){
-                Files.createDirectory(Path.of(threadIndexDir));
-            }
-            Path indexPathEmail = Files.createDirectory(Path.of(mailIndexDir + mailingList.getId()));
-            Path indexPathThreads = Files.createDirectory(Path.of(threadIndexDir + mailingList.getId()));
+            Path indexPathEmail = EMAIL_INDEX_DIR.resolve(String.valueOf(mailingList.getId()));
+            Path indexPathThreads = THREAD_INDEX_DIR.resolve(String.valueOf(mailingList.getId()));
+            Files.createDirectories(indexPathEmail);
+            Files.createDirectories(indexPathThreads);
             Directory directoryEmail = FSDirectory.open(indexPathEmail);
             Directory directoryThreads = FSDirectory.open(indexPathThreads);
             Analyzer analyzer = new StandardAnalyzer();
@@ -115,8 +105,8 @@ public class MailingListIndexer {
 
     public void deleteIndex(MailingList mailingList) {
         try {
-            Path indexPath = Path.of(indexDir + mailingList.getId());
-            IOUtils.rm(indexPath);
+            IOUtils.rm(EMAIL_INDEX_DIR.resolve(String.valueOf(mailingList.getId())));
+            IOUtils.rm(THREAD_INDEX_DIR.resolve(String.valueOf(mailingList.getId())));
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Index not deleting");

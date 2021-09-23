@@ -43,7 +43,7 @@ public class SearchService {
         try{
             emailIds = searcher.searchInMultipleIndices(
                     LuceneSearcher.emailQueryParser,
-                    MailingListIndexer.mailIndexDir,
+                    MailingListIndexer.EMAIL_INDEX_DIR.toString(),
                     query,
                     mailingListIds,
                     pageable.getPageNumber() * pageable.getPageSize(),
@@ -75,7 +75,7 @@ public class SearchService {
         try{
             emailIds = searcher.searchInMultipleIndices(
                     LuceneSearcher.emailQueryParser,
-                    MailingListIndexer.mailIndexDir,
+                    MailingListIndexer.EMAIL_INDEX_DIR.toString(),
                     query,
                     mailingListIds,
                     0,
@@ -103,7 +103,7 @@ public class SearchService {
 
             threadIds = searcher.searchInMultipleIndices(
                     LuceneSearcher.threadQueryParser,
-                    MailingListIndexer.threadIndexDir,
+                    MailingListIndexer.THREAD_INDEX_DIR.toString(),
                     query,
                     mailingListIds,
                     pageable.getPageNumber() * pageable.getPageSize(),
@@ -135,7 +135,7 @@ public class SearchService {
         try{
             threadIds = searcher.searchInMultipleIndices(
                     LuceneSearcher.threadQueryParser,
-                    MailingListIndexer.threadIndexDir,
+                    MailingListIndexer.THREAD_INDEX_DIR.toString(),
                     query,
                     mailingListIds,
                     0,

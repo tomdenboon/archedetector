@@ -3,17 +3,16 @@ package com.rug.archedetector.service;
 import com.rug.archedetector.dao.EmailRepository;
 import com.rug.archedetector.dao.EmailThreadRepository;
 import com.rug.archedetector.dao.MailingListRepository;
-import com.rug.archedetector.exceptions.ResourceNotFoundException;
 import com.rug.archedetector.lucene.MailingListIndexer;
 import com.rug.archedetector.model.Email;
 import com.rug.archedetector.model.EmailThread;
 import com.rug.archedetector.model.MailingList;
-import com.rug.archedetector.model.QueryCollection;
 import com.rug.archedetector.util.ApacheMailingListParser;
 import com.rug.archedetector.util.EmailFilter;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -22,15 +21,12 @@ import java.time.ZonedDateTime;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class MailingListService {
-    @Autowired
-    private MailingListRepository mailingListRepository;
-
-    @Autowired
-    private EmailRepository emailRepository;
-
-    @Autowired
-    private EmailThreadRepository emailThreadRepository;
+    private final MailingListRepository mailingListRepository;
+    private final EmailRepository emailRepository;
+    private final EmailThreadRepository emailThreadRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     private final MailingListIndexer mailingListIndexer = new MailingListIndexer();
 
@@ -66,7 +62,7 @@ public class MailingListService {
             cnt++;
         }
 
-        System.out.println(ThreadIdListEmail.size());
+        System.out.println("Unfiltered email thread id count: " + ThreadIdListEmail.size());
         for (Email email : uniqueEmails) {
             if (messageIdThreadId.containsKey(email.getInReplyTo())){
                 int threadId1 = messageIdThreadId.get(email.getMessageId());
@@ -79,7 +75,7 @@ public class MailingListService {
                 ThreadIdListEmail.remove(threadId1);
             }
         }
-        System.out.println(ThreadIdListEmail.size());
+        System.out.println("Filtered email thread id count: " + ThreadIdListEmail.size());
 
         List<Email> resultEmails = new ArrayList<>();
         List<EmailThread> threads = new ArrayList<>();
@@ -106,24 +102,30 @@ public class MailingListService {
             threads.add(emailThread);
         }
 
+        System.out.println("Saving all emails.");
         emailThreadRepository.saveAll(threads);
         emailRepository.saveAll(resultEmails);
+        System.out.println("Indexing emails.");
         mailingListIndexer.index(mailinglist, threads, resultEmails);
+        System.out.println("Done.");
         return mailinglist;
     }
 
     /**
      * This function Deletes a mailing list and its related objects from the database. First it checks if the
      * mailining list exists. Then deletes all relations to the other tables and after that it deletes itself.
+     *
+     * Uses raw SQL queries to increase performance for deleting thousands of
+     * emails at once.
      */
     @Transactional
     public ResponseEntity<?> delete(Long id) {
         return mailingListRepository.findById(id).map(mailingList -> {
             mailingList.prepareForDelete();
-            List<Email> emails = emailRepository.findByMailingListId(id);
-            List<EmailThread> threads = emailThreadRepository.findByMailingListId(id);
-            emailRepository.deleteAll(emails);
-            emailThreadRepository.deleteAll(threads);
+            this.jdbcTemplate.update("DELETE FROM email_tag WHERE email_id IN (SELECT id FROM email WHERE mailing_list_id = ?)", id);
+            this.jdbcTemplate.update("DELETE FROM email WHERE mailing_list_id = ?", id);
+            this.jdbcTemplate.update("DELETE FROM email_thread_tag WHERE email_thread_id IN (SELECT id FROM email_thread WHERE mailing_list_id = ?)", id);
+            this.jdbcTemplate.update("DELETE FROM email_thread WHERE mailing_list_id = ?", id);
             mailingListRepository.delete(mailingList);
             mailingListIndexer.deleteIndex(mailingList);
             return ResponseEntity.ok().build();
