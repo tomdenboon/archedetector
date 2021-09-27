@@ -1,7 +1,6 @@
 package com.rug.archedetector.dao;
 
 
-import com.rug.archedetector.model.Email;
 import com.rug.archedetector.model.EmailThread;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -34,6 +34,9 @@ public class EmailThread {
     )
     private Set<Tag> tags = new HashSet<>();
 
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "emailThread", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Email> emails = new HashSet<>();
+
     private int tagCount;
 
     @PreUpdate

@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 
 
@@ -22,6 +24,11 @@ public class QueryCollectionController {
     @GetMapping("/query-collection/{id}")
     public QueryCollection getQueryCollection(@PathVariable long id) {
         return queryCollectionService.get(id);
+    }
+
+    @GetMapping("/query-collection/{id}/export")
+    public void exportQueryCollection(@PathVariable long id, HttpServletResponse response) throws IOException {
+        this.queryCollectionService.export(id, response);
     }
 
     @PostMapping("/query-collection")
