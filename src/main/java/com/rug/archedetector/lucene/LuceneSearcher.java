@@ -51,7 +51,7 @@ public class LuceneSearcher {
         Query q = queryParser.parse(query);
         List<IndexReader> readers = new ArrayList<>();
         for(int i = 0; i < ids.size(); i++){
-            Path path = Path.of(indexDir+ids.get(i));
+            Path path = Path.of(indexDir, String.valueOf(ids.get(i)));
             if (Files.exists(path)) {
                 Directory indexDirectory =
                         FSDirectory.open(path);
