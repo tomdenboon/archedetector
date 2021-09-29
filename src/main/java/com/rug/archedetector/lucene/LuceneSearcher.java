@@ -44,39 +44,34 @@ public class LuceneSearcher {
      * @param endIndex determines the end of the results returned
      * @return an id list of top results found by the search
      */
-    public List<Long> searchInMultipleIndices(MultiFieldQueryParser queryParser, String indexDir,
-                                              String query, List<Long> ids, int startIndex, int endIndex)
-            throws ParseException, IOException {
+    public List<Long> searchInMultipleIndices(
+            MultiFieldQueryParser queryParser,
+            String indexDir,
+            String query,
+            List<Long> ids,
+            int startIndex,
+            int endIndex
+    ) throws ParseException, IOException {
         List<Long> resultIds = new ArrayList<>();
         Query q = queryParser.parse(query);
         List<IndexReader> readers = new ArrayList<>();
-        for(int i = 0; i < ids.size(); i++){
-            Path path = Path.of(indexDir, String.valueOf(ids.get(i)));
+        for (Long id : ids) {
+            Path path = Path.of(indexDir, String.valueOf(id));
             if (Files.exists(path)) {
-                Directory indexDirectory =
-                        FSDirectory.open(path);
-
+                Directory indexDirectory = FSDirectory.open(path);
                 readers.add(DirectoryReader.open(indexDirectory));
             }
         }
-        if(readers.size()>0) {
-            IndexReader[] indexReaders = new IndexReader[readers.size()];
-            for (int i = 0; i < readers.size(); i++)
-            {
-                indexReaders[i] = readers.get(i);
-            }
-            MultiReader multiReader = new MultiReader(indexReaders);
+        if (readers.size() > 0) {
+            MultiReader multiReader = new MultiReader(readers.toArray(new IndexReader[0]));
             IndexSearcher searcher = new IndexSearcher(multiReader);
-
             TopDocs docs = searcher.search(q, endIndex);
-
             ScoreDoc[] hits = docs.scoreDocs;
             for (int i = startIndex; i < hits.length; ++i) {
                 int docId = hits[i].doc;
                 Document d = searcher.doc(docId);
                 resultIds.add(Long.parseLong(d.get("id")));
             }
-
             multiReader.close();
         }
         return resultIds;
