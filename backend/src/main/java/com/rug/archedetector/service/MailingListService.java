@@ -38,13 +38,17 @@ public class MailingListService {
     }
 
     /**
-     * This function retrieves the mail from the mailing list url based on the filters.
-     * Then it will use some logic to thread them and store both the mail and the threads
+     * This function retrieves the mail from the mailing list url based on the
+     * filters.
+     * Then it will use some logic to thread them and store both the mail and the
+     * threads
      * in the database
      *
      *
-     * @param mailinglist an apache mailing list which has to contain an url to the apache mailing list
-     * @param filters a list of strings and only filters if it matches a string in EmailFilter filterMail
+     * @param mailinglist an apache mailing list which has to contain an url to the
+     *                    apache mailing list
+     * @param filters     a list of strings and only filters if it matches a string
+     *                    in EmailFilter filterMail
      */
     public MailingList addFromApacheArchiveWithFilters(MailingList mailinglist, String[] filters) {
         mailinglist = mailingListRepository.save(mailinglist);
@@ -65,33 +69,32 @@ public class MailingListService {
 
         System.out.println(ThreadIdListEmail.size());
         for (Email email : uniqueEmails) {
-            if (messageIdThreadId.containsKey(email.getInReplyTo())){
+            if (messageIdThreadId.containsKey(email.getInReplyTo())) {
                 int threadId1 = messageIdThreadId.get(email.getMessageId());
                 int threadId2 = messageIdThreadId.get(email.getInReplyTo());
                 List<Email> emails1 = ThreadIdListEmail.get(threadId1);
                 ThreadIdListEmail.get(threadId2).addAll(emails1);
-                for(Email e : emails1){
+                for (Email e : emails1) {
                     messageIdThreadId.put(e.getMessageId(), threadId2);
                 }
                 ThreadIdListEmail.remove(threadId1);
             }
         }
-        System.out.println(ThreadIdListEmail.size());
 
         List<Email> resultEmails = new ArrayList<>();
         List<EmailThread> threads = new ArrayList<>();
-        for(Map.Entry<Integer, List<Email>> entry : ThreadIdListEmail.entrySet()) {
+        for (Map.Entry<Integer, List<Email>> entry : ThreadIdListEmail.entrySet()) {
             EmailThread emailThread = new EmailThread();
             emailThread.setMailingList(mailinglist);
             ZonedDateTime date = null;
             ZonedDateTime first = null;
             String firstSubject = "";
-            for(Email email : entry.getValue()){
+            for (Email email : entry.getValue()) {
                 email.setEmailThread(emailThread);
-                if(date == null || email.getDate().isAfter(date)){
+                if (date == null || email.getDate().isAfter(date)) {
                     date = email.getDate();
                 }
-                if(first == null || email.getDate().isBefore(first)){
+                if (first == null || email.getDate().isBefore(first)) {
                     first = email.getDate();
                     firstSubject = email.getSubject();
                 }
@@ -110,8 +113,10 @@ public class MailingListService {
     }
 
     /**
-     * This function Deletes a mailing list and its related objects from the database. First it checks if the
-     * mailining list exists. Then deletes all relations to the other tables and after that it deletes itself.
+     * This function Deletes a mailing list and its related objects from the
+     * database. First it checks if the
+     * mailining list exists. Then deletes all relations to the other tables and
+     * after that it deletes itself.
      */
     public ResponseEntity<?> delete(Long id) {
         return mailingListRepository.findById(id).map(mailingList -> {
