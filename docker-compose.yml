@@ -1,0 +1,17 @@
+services:
+  frontend:
+    build: 
+      context: frontend
+    ports:
+      - 420:420
+  backend:
+    build: 
+      context: backend
+    ports:
+      - 8080:8080
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: archedetector
